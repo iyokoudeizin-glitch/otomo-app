@@ -305,12 +305,49 @@
             width: 100%;
             display: flex;
             justify-content: center;
-            overflow-x: auto;
+            max-height: 350px;
+            overflow-y: auto;
         }
 
         canvas {
             border: 1px solid #ccc;
             background-color: #fff;
+        }
+
+        /* ツールバー */
+        .note-selector {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            background: #f1f5f9;
+            padding: 0.75rem;
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        .note-selector-group {
+            display: flex;
+            gap: 0.3rem;
+            align-items: center;
+        }
+
+        .note-btn {
+            background: white;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .note-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
         }
 
         .keyboard {
@@ -509,9 +546,31 @@
             <div class="modal-body">
                 <!-- ピアノ用 五線譜キャンバスビュー -->
                 <div id="modal-piano-section" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-                    <div id="score-container">
-                        <canvas id="staffCanvas" width="700" height="260"></canvas>
+                    
+                    <!-- 音符・休符選択ツールバー -->
+                    <div class="note-selector">
+                        <span style="font-weight: bold; font-size: 0.85rem; color: var(--text-sub);">音符の長さ:</span>
+                        <div class="note-selector-group">
+                            <button type="button" class="note-btn" onclick="setNoteDuration(4, this)">全音符</button>
+                            <button type="button" class="note-btn" onclick="setNoteDuration(2, this)">2分</button>
+                            <button type="button" class="note-btn active" onclick="setNoteDuration(1, this)">4分</button>
+                            <button type="button" class="note-btn" onclick="setNoteDuration(0.5, this)">8分</button>
+                            <button type="button" class="note-btn" onclick="setNoteDuration(0.25, this)">16分</button>
+                        </div>
+                        <span style="font-weight: bold; font-size: 0.85rem; color: var(--text-sub); margin-left: 0.5rem;">休符の挿入:</span>
+                        <div class="note-selector-group">
+                            <button type="button" class="note-btn" onclick="addRest(4)">全休符</button>
+                            <button type="button" class="note-btn" onclick="addRest(2)">2分休符</button>
+                            <button type="button" class="note-btn" onclick="addRest(1)">4分休符</button>
+                            <button type="button" class="note-btn" onclick="addRest(0.5)">8分休符</button>
+                            <button type="button" class="note-btn" onclick="addRest(0.25)">16分休符</button>
+                        </div>
                     </div>
+
+                    <div id="score-container">
+                        <canvas id="staffCanvas" width="750" height="150"></canvas>
+                    </div>
+
                     <div class="keyboard">
                         <div class="key white-key" onclick="playAndAddNote('C4', 0)">ド</div>
                         <div class="key black-key" style="left: 41px;" onclick="playAndAddNote('C#4', 0.5)"></div>
@@ -648,13 +707,23 @@
         document.getElementById('btn-close-modal').addEventListener('click', closeInstrumentModal);
         document.getElementById('btn-close-modal-footer').addEventListener('click', closeInstrumentModal);
 
-        // --- ピアノ用機能 (2段自動折り返し対応) ---
+        // --- ピアノ楽譜エディタ機能 ---
         let pianoNotesHistory = [];
+        let currentDuration = 1; // デフォルトは4分音符 (1拍)
+
         const frequencies = {
             'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13,
             'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00,
             'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88, 'C5': 523.25
         };
+
+        function setNoteDuration(duration, btnElement) {
+            currentDuration = duration;
+            document.querySelectorAll('.note-selector-group .note-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (btnElement) btnElement.classList.add('active');
+        }
 
         function playSound(note) {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -677,11 +746,20 @@
 
         function playAndAddNote(noteName, positionStep) {
             playSound(noteName);
-            if (pianoNotesHistory.length >= 36) {
-                alert("これ以上音符を追加できません。リセットしてください。");
-                return;
-            }
-            pianoNotesHistory.push({ noteName, positionStep });
+            pianoNotesHistory.push({
+                type: 'note',
+                noteName,
+                positionStep,
+                duration: currentDuration
+            });
+            redrawStaff();
+        }
+
+        function addRest(duration) {
+            pianoNotesHistory.push({
+                type: 'rest',
+                duration: duration
+            });
             redrawStaff();
         }
 
@@ -692,69 +770,164 @@
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 1;
 
+            // 5本線描画
             for (let i = 0; i < 5; i++) {
-                let y = startY + i * 15;
+                let y = startY + i * 12;
                 ctx.beginPath();
                 ctx.moveTo(20, y);
                 ctx.lineTo(canvas.width - 20, y);
                 ctx.stroke();
             }
 
-            ctx.font = '50px serif';
+            // ト音記号
+            ctx.font = '42px serif';
             ctx.fillStyle = '#000';
-            ctx.fillText('🎼', 25, startY + 50);
+            ctx.fillText('🎼', 22, startY + 40);
         }
 
         function redrawStaff() {
+            const beatsPerLine = 16; // 1行あたり16拍分（例: 4/4拍子で4小節）
+            const pixelsPerBeat = 38; // 1拍あたりの横幅ピクセル
+            const lineSpacingY = 110; // 行ごとの高さの幅
+
+            // 総行数を算出
+            let currentLineBeats = 0;
+            let totalLines = 1;
+
+            pianoNotesHistory.forEach(item => {
+                if (currentLineBeats + item.duration > beatsPerLine) {
+                    totalLines++;
+                    currentLineBeats = item.duration;
+                } else {
+                    currentLineBeats += item.duration;
+                }
+            });
+
+            // 行数に合わせてキャンバスの高さを動的に調整
+            canvas.height = Math.max(150, totalLines * lineSpacingY + 30);
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 1段目と2段目を描画
-            drawSystem(30);
-            drawSystem(150);
+            // 各行の五線譜を描画
+            for (let l = 0; l < totalLines; l++) {
+                drawSystem(30 + l * lineSpacingY);
+            }
 
-            const startX = 100;
-            const noteSpacing = 30;
-            const lineSpacing = 7.5;
-            const maxNotesPerLine = 18;
+            // 音符・休符の描画
+            let lineIndex = 0;
+            let lineBeat = 0;
+            const startX = 85;
+            const lineSpacing = 6; // 幹・音間の高さステップ
 
-            pianoNotesHistory.forEach((note, index) => {
-                const lineIndex = Math.floor(index / maxNotesPerLine);
-                const colIndex = index % maxNotesPerLine;
-
-                if (lineIndex >= 2) return; // 最大2段まで
-
-                const x = startX + colIndex * noteSpacing;
-                const baseStartY = lineIndex === 0 ? 30 : 150;
-                const bottomLineY = baseStartY + 60;
-
-                const step = Math.floor(note.positionStep);
-                const isSharp = note.noteName.includes('#');
-                const y = bottomLineY - (step - 2) * lineSpacing;
-
-                if (isSharp) {
-                    ctx.font = '14px serif';
-                    ctx.fillStyle = '#000';
-                    ctx.fillText('♯', x - 12, y + 5);
+            pianoNotesHistory.forEach(item => {
+                // 行あふれの判定と改行処理
+                if (lineBeat + item.duration > beatsPerLine) {
+                    lineIndex++;
+                    lineBeat = 0;
                 }
 
-                if (step === 0) {
-                    ctx.beginPath();
-                    ctx.moveTo(x - 10, y);
-                    ctx.lineTo(x + 10, y);
-                    ctx.stroke();
+                const baseStartY = 30 + lineIndex * lineSpacingY;
+                const bottomLineY = baseStartY + 48; // 五線譜の最下線 (E4)
+                const x = startX + lineBeat * pixelsPerBeat;
+
+                if (item.type === 'rest') {
+                    // --- 休符の描画 ---
+                    drawRest(x, baseStartY, item.duration);
+                } else {
+                    // --- 音符の描画 ---
+                    drawNote(x, bottomLineY, item);
                 }
 
+                lineBeat += item.duration;
+            });
+        }
+
+        function drawRest(x, baseStartY, duration) {
+            ctx.fillStyle = '#000';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1.5;
+
+            const centerY = baseStartY + 24; // 五線譜の中央
+
+            if (duration === 4) { // 全休符（第4線からぶら下がる箱）
+                ctx.fillRect(x - 6, baseStartY + 12, 12, 6);
+            } else if (duration === 2) { // 2分休符（第3線の上に乗る箱）
+                ctx.fillRect(x - 6, baseStartY + 18, 12, 6);
+            } else if (duration === 1) { // 4分休符
+                ctx.font = '22px sans-serif';
+                ctx.fillText('𝄽', x - 5, centerY + 8);
+            } else if (duration === 0.5) { // 8分休符
+                ctx.font = '22px sans-serif';
+                ctx.fillText('𝄾', x - 5, centerY + 8);
+            } else if (duration === 0.25) { // 16分休符
+                ctx.font = '22px sans-serif';
+                ctx.fillText('𝄿', x - 5, centerY + 8);
+            }
+        }
+
+        function drawNote(x, bottomLineY, item) {
+            const step = Math.floor(item.positionStep);
+            const isSharp = item.noteName.includes('#');
+            const lineSpacing = 6;
+            const y = bottomLineY - step * lineSpacing;
+
+            // シャープ記号
+            if (isSharp) {
+                ctx.font = '14px serif';
+                ctx.fillStyle = '#000';
+                ctx.fillText('♯', x - 14, y + 5);
+            }
+
+            // 下加線（ド（C4）用）
+            if (step === 0) {
                 ctx.beginPath();
-                ctx.ellipse(x, y, 6, 4.5, -Math.PI / 6, 0, 2 * Math.PI);
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 1;
+                ctx.moveTo(x - 8, y);
+                ctx.lineTo(x + 8, y);
+                ctx.stroke();
+            }
+
+            // 符頭（音符のたま）の描画
+            ctx.beginPath();
+            ctx.ellipse(x, y, 5.5, 4, -Math.PI / 6, 0, 2 * Math.PI);
+
+            if (item.duration === 4) { // 全音符（白抜き）
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                return; // 符幹（棒）なし
+            } else if (item.duration === 2) { // 2分音符（白抜き）
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            } else { // 4分, 8分, 16分音符（黒塗り）
                 ctx.fillStyle = '#000';
                 ctx.fill();
+            }
 
+            // 符幹（棒）の描画
+            ctx.beginPath();
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#000';
+            ctx.moveTo(x + 4.5, y);
+            ctx.lineTo(x + 4.5, y - 22);
+            ctx.stroke();
+
+            // 旗（8分音符・16分音符）の描画
+            if (item.duration === 0.5) { // 8分音符 (1本旗)
                 ctx.beginPath();
-                ctx.lineWidth = 1.5;
-                ctx.moveTo(x + 5, y);
-                ctx.lineTo(x + 5, y - 25);
+                ctx.moveTo(x + 4.5, y - 22);
+                ctx.quadraticCurveTo(x + 12, y - 16, x + 10, y - 8);
                 ctx.stroke();
-            });
+            } else if (item.duration === 0.25) { // 16分音符 (2本旗)
+                ctx.beginPath();
+                ctx.moveTo(x + 4.5, y - 22);
+                ctx.quadraticCurveTo(x + 12, y - 16, x + 10, y - 8);
+                ctx.moveTo(x + 4.5, y - 16);
+                ctx.quadraticCurveTo(x + 12, y - 10, x + 10, y - 2);
+                ctx.stroke();
+            }
         }
 
         // --- ギターTAB譜ジェネレーター機能 ---
