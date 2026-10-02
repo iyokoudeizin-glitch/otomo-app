@@ -167,6 +167,8 @@
 
         button.secondary { background-color: #64748b; }
         button.secondary:hover { background-color: #475569; }
+        button.success { background-color: #10b981; }
+        button.success:hover { background-color: #059669; }
         button.danger { background-color: #ef4444; }
         button.danger:hover { background-color: #dc2626; }
 
@@ -218,6 +220,69 @@
         }
 
         input[type="range"] { flex: 1; }
+
+        /* チューナー スタイル */
+        .tuner-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #0f172a;
+            color: #fff;
+            padding: 1rem;
+            border-radius: 10px;
+            gap: 0.5rem;
+        }
+
+        .tuner-note {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #38bdf8;
+            height: 3.2rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .tuner-meter-container {
+            width: 100%;
+            height: 12px;
+            background: #334155;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tuner-meter-center {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #f43f5e;
+            transform: translateX(-50%);
+            z-index: 2;
+        }
+
+        .tuner-meter-pointer {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            background: #10b981;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: left 0.1s ease-out;
+            border-radius: 4px;
+        }
+
+        .tuner-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            font-family: 'Fira Code', monospace;
+        }
 
         .instrument-launchers {
             display: flex;
@@ -519,6 +584,25 @@
                 </div>
             </div>
 
+            <!-- 追加: Webチューナー -->
+            <div class="card">
+                <div class="card-header">🎸 Webチューナー</div>
+                <div class="card-body">
+                    <div class="tuner-display">
+                        <div class="tuner-note" id="tuner-note">--</div>
+                        <div class="tuner-meter-container">
+                            <div class="tuner-meter-center"></div>
+                            <div class="tuner-meter-pointer" id="tuner-pointer"></div>
+                        </div>
+                        <div class="tuner-info">
+                            <span id="tuner-freq">-- Hz</span>
+                            <span id="tuner-cents">-- cent</span>
+                        </div>
+                    </div>
+                    <button type="button" id="tuner-btn">マイクを起動</button>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header">🎼 楽譜メーカー</div>
                 <div class="card-body">
@@ -587,6 +671,8 @@
                         <div class="key white-key" onclick="playAndAddNote('C5', 7)">高いド</div>
                     </div>
                     <div style="display: flex; gap: 0.75rem; width: 100%; justify-content: center; margin-top: 0.5rem;">
+                        <!-- 追加: 再生コントロールボタン -->
+                        <button type="button" class="success" id="play-score-btn" onclick="playScore()">▶ 楽譜を再生</button>
                         <button type="button" class="secondary" onclick="pianoNotesHistory.pop(); redrawStaff();">1つ消す</button>
                         <button type="button" class="danger" onclick="pianoNotesHistory = []; redrawStaff();">すべて消す</button>
                     </div>
@@ -638,8 +724,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
-        // --- メトロノーム機能 ---
+        // --- 共通 AudioContext ---
         let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        // --- メトロノーム機能 ---
         let isPlaying = false;
         let timerId = null;
         let bpm = 120;
@@ -660,21 +757,20 @@
         });
 
         function playClick() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator();
-            const envelope = audioCtx.createGain();
+            const ctx = getAudioContext();
+            const osc = ctx.createOscillator();
+            const envelope = ctx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-            envelope.gain.setValueAtTime(1, audioCtx.currentTime);
-            envelope.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            osc.frequency.setValueAtTime(800, ctx.currentTime);
+            envelope.gain.setValueAtTime(1, ctx.currentTime);
+            envelope.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
             osc.connect(envelope);
-            envelope.connect(audioCtx.destination);
+            envelope.connect(ctx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.05);
+            osc.stop(ctx.currentTime + 0.05);
         }
 
         function startMetronome() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const interval = (60 / bpm) * 1000;
             playClick();
             timerId = setInterval(playClick, interval);
@@ -682,6 +778,143 @@
         }
 
         function stopMetronome() { clearInterval(timerId); isPlaying = false; }
+
+        // --- Webチューナー機能 ---
+        let tunerStream = null;
+        let tunerAudioCtx = null;
+        let tunerAnalyser = null;
+        let tunerIsListening = false;
+        let tunerAnimationId = null;
+
+        const tunerBtn = document.getElementById('tuner-btn');
+        const tunerNoteEl = document.getElementById('tuner-note');
+        const tunerFreqEl = document.getElementById('tuner-freq');
+        const tunerCentsEl = document.getElementById('tuner-cents');
+        const tunerPointerEl = document.getElementById('tuner-pointer');
+
+        const noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+        tunerBtn.addEventListener('click', async () => {
+            if (tunerIsListening) {
+                stopTuner();
+            } else {
+                await startTuner();
+            }
+        });
+
+        async function startTuner() {
+            try {
+                tunerStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                tunerAudioCtx = getAudioContext();
+                const source = tunerAudioCtx.createMediaStreamSource(tunerStream);
+                tunerAnalyser = tunerAudioCtx.createAnalyser();
+                tunerAnalyser.fftSize = 2048;
+                source.connect(tunerAnalyser);
+
+                tunerIsListening = true;
+                tunerBtn.textContent = "マイクを停止";
+                tunerBtn.classList.add('danger');
+
+                updateTuner();
+            } catch (err) {
+                alert("マイクへのアクセスが拒否されたか、利用できません。");
+                console.error(err);
+            }
+        }
+
+        function stopTuner() {
+            tunerIsListening = false;
+            if (tunerAnimationId) cancelAnimationFrame(tunerAnimationId);
+            if (tunerStream) {
+                tunerStream.getTracks().forEach(track => track.stop());
+                tunerStream = null;
+            }
+            tunerBtn.textContent = "マイクを起動";
+            tunerBtn.classList.remove('danger');
+            tunerNoteEl.textContent = "--";
+            tunerFreqEl.textContent = "-- Hz";
+            tunerCentsEl.textContent = "-- cent";
+            tunerPointerEl.style.left = "50%";
+        }
+
+        function autoCorrelate(buf, sampleRate) {
+            let SIZE = buf.length;
+            let rms = 0;
+            for (let i = 0; i < SIZE; i++) {
+                let val = buf[i];
+                rms += val * val;
+            }
+            rms = Math.sqrt(rms / SIZE);
+            if (rms < 0.01) return -1; // 入力信号が小さすぎる場合
+
+            let r1 = 0, r2 = SIZE - 1, thres = 0.2;
+            for (let i = 0; i < SIZE / 2; i++) {
+                if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+            }
+            for (let i = 1; i < SIZE / 2; i++) {
+                if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
+            }
+
+            buf = buf.slice(r1, r2);
+            SIZE = buf.length;
+
+            let c = new Array(SIZE).fill(0);
+            for (let i = 0; i < SIZE; i++) {
+                for (let j = 0; j < SIZE - i; j++) {
+                    c[i] = c[i] + buf[j] * buf[j + i];
+                }
+            }
+
+            let d = 0;
+            while (c[d] > c[d + 1]) d++;
+            let maxval = -1, maxpos = -1;
+            for (let i = d; i < SIZE; i++) {
+                if (c[i] > maxval) {
+                    maxval = c[i];
+                    maxpos = i;
+                }
+            }
+            let T0 = maxpos;
+
+            let x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
+            let a = (x1 + x3 - 2 * x2) / 2;
+            let b = (x3 - x1) / 2;
+            if (a) T0 = T0 - b / (2 * a);
+
+            return sampleRate / T0;
+        }
+
+        function updateTuner() {
+            if (!tunerIsListening) return;
+
+            const buf = new Float32Array(2048);
+            tunerAnalyser.getFloatTimeDomainData(buf);
+            const pitch = autoCorrelate(buf, tunerAudioCtx.sampleRate);
+
+            if (pitch !== -1) {
+                const noteNum = 12 * (Math.log(pitch / 440) / Math.log(2)) + 69;
+                const noteIndex = Math.round(noteNum);
+                const noteName = noteStrings[noteIndex % 12];
+                const expectedFreq = 440 * Math.pow(2, (noteIndex - 69) / 12);
+                const cents = Math.floor((1200 * Math.log(pitch / expectedFreq)) / Math.log(2));
+
+                tunerNoteEl.textContent = noteName;
+                tunerFreqEl.textContent = pitch.toFixed(1) + " Hz";
+                tunerCentsEl.textContent = (cents >= 0 ? "+" : "") + cents + " cent";
+
+                let pointerPos = 50 + (cents / 50) * 45;
+                pointerPos = Math.max(5, Math.min(95, pointerPos));
+                tunerPointerEl.style.left = pointerPos + "%";
+
+                if (Math.abs(cents) < 5) {
+                    tunerPointerEl.style.background = "#10b981";
+                } else {
+                    tunerPointerEl.style.background = "#f43f5e";
+                }
+            }
+
+            tunerAnimationId = requestAnimationFrame(updateTuner);
+        }
 
         // --- モーダル制御 ---
         function openInstrumentModal(inst) {
@@ -700,6 +933,7 @@
 
         function closeInstrumentModal() {
             document.getElementById('instrument-modal').style.display = 'none';
+            if (isScorePlaying) stopScore();
         }
 
         document.getElementById('btn-open-piano').addEventListener('click', () => openInstrumentModal('piano'));
@@ -707,9 +941,11 @@
         document.getElementById('btn-close-modal').addEventListener('click', closeInstrumentModal);
         document.getElementById('btn-close-modal-footer').addEventListener('click', closeInstrumentModal);
 
-        // --- ピアノ楽譜エディタ機能 ---
+        // --- ピアノ楽譜エディタ機能 & 自動再生 ---
         let pianoNotesHistory = [];
         let currentDuration = 1; // デフォルトは4分音符 (1拍)
+        let isScorePlaying = false;
+        let scorePlaybackTimeout = null;
 
         const frequencies = {
             'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13,
@@ -725,23 +961,22 @@
             if (btnElement) btnElement.classList.add('active');
         }
 
-        function playSound(note) {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+        function playSound(note, durationInSeconds = 0.8) {
+            const ctx = getAudioContext();
             
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
 
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(frequencies[note], audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+            osc.frequency.setValueAtTime(frequencies[note], ctx.currentTime);
+            gain.gain.setValueAtTime(0.5, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationInSeconds);
 
             osc.connect(gain);
-            gain.connect(audioCtx.destination);
+            gain.connect(ctx.destination);
 
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.8);
+            osc.stop(ctx.currentTime + durationInSeconds);
         }
 
         function playAndAddNote(noteName, positionStep) {
@@ -761,6 +996,57 @@
                 duration: duration
             });
             redrawStaff();
+        }
+
+        // 楽譜の再生機能
+        function playScore() {
+            if (isScorePlaying) {
+                stopScore();
+                return;
+            }
+            if (pianoNotesHistory.length === 0) {
+                showToast("再生する音符がありません");
+                return;
+            }
+
+            isScorePlaying = true;
+            const playBtn = document.getElementById('play-score-btn');
+            playBtn.textContent = "⏹ 再生停止";
+            playBtn.classList.remove('success');
+            playBtn.classList.add('danger');
+
+            const secondsPerBeat = 60 / bpm;
+            let index = 0;
+
+            function playNextStep() {
+                if (!isScorePlaying || index >= pianoNotesHistory.length) {
+                    stopScore();
+                    return;
+                }
+
+                const item = pianoNotesHistory[index];
+                const noteDurationSec = item.duration * secondsPerBeat;
+
+                if (item.type === 'note') {
+                    playSound(item.noteName, noteDurationSec * 0.9);
+                }
+
+                index++;
+                scorePlaybackTimeout = setTimeout(playNextStep, noteDurationSec * 1000);
+            }
+
+            playNextStep();
+        }
+
+        function stopScore() {
+            isScorePlaying = false;
+            if (scorePlaybackTimeout) clearTimeout(scorePlaybackTimeout);
+            const playBtn = document.getElementById('play-score-btn');
+            if (playBtn) {
+                playBtn.textContent = "▶ 楽譜を再生";
+                playBtn.classList.remove('danger');
+                playBtn.classList.add('success');
+            }
         }
 
         const canvas = document.getElementById('staffCanvas');
@@ -817,7 +1103,6 @@
             let lineIndex = 0;
             let lineBeat = 0;
             const startX = 85;
-            const lineSpacing = 6; // 幹・音間の高さステップ
 
             pianoNotesHistory.forEach(item => {
                 // 行あふれの判定と改行処理
@@ -849,9 +1134,9 @@
 
             const centerY = baseStartY + 24; // 五線譜の中央
 
-            if (duration === 4) { // 全休符（第4線からぶら下がる箱）
+            if (duration === 4) { // 全休符
                 ctx.fillRect(x - 6, baseStartY + 12, 12, 6);
-            } else if (duration === 2) { // 2分休符（第3線の上に乗る箱）
+            } else if (duration === 2) { // 2分休符
                 ctx.fillRect(x - 6, baseStartY + 18, 12, 6);
             } else if (duration === 1) { // 4分休符
                 ctx.font = '22px sans-serif';
@@ -892,16 +1177,16 @@
             ctx.beginPath();
             ctx.ellipse(x, y, 5.5, 4, -Math.PI / 6, 0, 2 * Math.PI);
 
-            if (item.duration === 4) { // 全音符（白抜き）
+            if (item.duration === 4) { // 全音符
                 ctx.strokeStyle = '#000';
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
                 return; // 符幹（棒）なし
-            } else if (item.duration === 2) { // 2分音符（白抜き）
+            } else if (item.duration === 2) { // 2分音符
                 ctx.strokeStyle = '#000';
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
-            } else { // 4分, 8分, 16分音符（黒塗り）
+            } else { // 4分, 8分, 16分音符
                 ctx.fillStyle = '#000';
                 ctx.fill();
             }
@@ -915,12 +1200,12 @@
             ctx.stroke();
 
             // 旗（8分音符・16分音符）の描画
-            if (item.duration === 0.5) { // 8分音符 (1本旗)
+            if (item.duration === 0.5) { // 8分音符
                 ctx.beginPath();
                 ctx.moveTo(x + 4.5, y - 22);
                 ctx.quadraticCurveTo(x + 12, y - 16, x + 10, y - 8);
                 ctx.stroke();
-            } else if (item.duration === 0.25) { // 16分音符 (2本旗)
+            } else if (item.duration === 0.25) { // 16分音符
                 ctx.beginPath();
                 ctx.moveTo(x + 4.5, y - 22);
                 ctx.quadraticCurveTo(x + 12, y - 16, x + 10, y - 8);
