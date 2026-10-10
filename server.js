@@ -37,7 +37,7 @@ app.post('/api/chat', upload.single('media'), async (req, res) => {
 
         if (!chatSessions[sessionId]) {
             chatSessions[sessionId] = ai.chats.create({
-                model: 'gemini-3.6-flash', // 最初に使っていたモデルに戻しました
+                model: 'gemini-3.6-flash',
                 config: {
                     systemInstruction: "あなたは音楽学習プラットフォーム「otomo」の優秀なAIアシスタントです。音楽理論、楽譜の読み方、楽器の練習方法などを分かりやすく教えてください。"
                 }
@@ -83,14 +83,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`otomo サーバー起動完了: http://localhost:3000`);
 });
-```[cite: 5]
-
----
-
-### 反映手順
-こちらのコードを `server.js` に上書き保存していただき、ターミナルで以下のコマンドを実行してください。
-
-```bash
-git add server.js
-git commit -m "Revert model back to gemini-3.6-flash"
-git push
