@@ -3,7 +3,7 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 const { GoogleGenAI } = require('@google/genai');
-const { marked } = require('marked'); // 追加：MarkdownをHTMLに変換するため
+const { marked } = require('marked'); // マークダウン変換用
 
 const app = express();
 const upload = multer({ dest: 'uploads/' }); // 一時保存フォルダ
@@ -40,7 +40,7 @@ app.post('/api/chat', upload.single('media'), async (req, res) => {
 
         if (!chatSessions[sessionId]) {
             chatSessions[sessionId] = ai.chats.create({
-                model: 'gemini-2.5-flash', // ※安定動作するフラッシュモデルを指定
+                model: 'gemini-2.5-flash',
                 config: {
                     systemInstruction: "あなたは音楽学習プラットフォーム「otomo」の優秀なAIアシスタントです。音楽理論、楽譜の読み方、楽器の練習方法などを分かりやすく教えてください。"
                 }
@@ -73,11 +73,10 @@ app.post('/api/chat', upload.single('media'), async (req, res) => {
             }
         });
 
-        // AIからのMarkdown形式のテキストをHTMLに変換
+        // AIからの返答をMarkdownからHTMLに変換
         const rawText = response.text || "";
         const htmlReply = marked.parse(rawText);
 
-        // 変換したHTMLを返す
         res.json({ reply: htmlReply });
     } catch (error) {
         console.error("API Error:", error);
@@ -93,27 +92,10 @@ app.listen(PORT, () => {
 
 ---
 
-### 3. フロントエンド側（例: `public/index.html`）での受け取り方
-サーバー側ですでにHTMLに変換されているため、フロントエンド側では `innerHTML` を使ってそのまま要素に埋め込むだけで、綺麗にフォーマットされた状態で表示できます。
-
-```javascript
-// チャット送信処理のイメージ
-fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: userMessage, sessionId: 'default' })
-})
-.then(res => res.json())
-.then(data => {
-    const chatContainer = document.getElementById('chat-container');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'ai-message';
-    
-    // サーバーから送られてきたHTMLをそのまま代入
-    messageDiv.innerHTML = data.reply;
-    
-    chatContainer.appendChild(messageDiv);
-})
-.catch(err => {
-    console.error('通信エラー:', err);
-});
+### 次の手順
+1. `server.js` を上のコードにすべて上書き保存する。
+2. ターミナルで以下のコマンドを実行してGitHubへ反映させる。
+   ```bash
+   git add server.js
+   git commit -m "Fix syntax error in server.js"
+   git push
