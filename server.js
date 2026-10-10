@@ -3,29 +3,26 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 const { GoogleGenAI } = require('@google/genai');
-const { marked } = require('marked'); // マークダウン変換用
+const { marked } = require('marked');
 
 const app = express();
-const upload = multer({ dest: 'uploads/' }); // 一時保存フォルダ
+const upload = multer({ dest: 'uploads/' });
 const ai = new GoogleGenAI();
 
 app.use(express.json());
 app.use(express.static('public'));
 
-// セッションごとのチャット履歴を保持
 const chatSessions = {};
 
-// リトライ用のヘルパー関数（エラー時に待機して再試行する）
 async function retryOperation(fn, retries = 3, delay = 2000) {
     for (let i = 0; i < retries; i++) {
         try {
             return await fn();
         } catch (error) {
-            // 503エラー（UNAVAILABLE）かつ、まだ試行回数が残っている場合
             if (error.status === 503 && i < retries - 1) {
                 console.log(`APIが混雑しています（503）。${delay / 1000}秒後に再試行します... (${i + 1}/${retries})`);
                 await new Promise(resolve => setTimeout(resolve, delay));
-                delay *= 2; // 待機時間を少しずつ長くする（指数バックオフ）
+                delay *= 2;
             } else {
                 throw error;
             }
@@ -50,7 +47,6 @@ app.post('/api/chat', upload.single('media'), async (req, res) => {
         const chat = chatSessions[sessionId];
         let response;
 
-        // リトライ関数を使ってメッセージを送信する
         await retryOperation(async () => {
             if (file) {
                 const fileBuffer = fs.readFileSync(file.path);
@@ -67,13 +63,12 @@ app.post('/api/chat', upload.single('media'), async (req, res) => {
                         }
                     ]
                 });
-                fs.unlinkSync(file.path); // 一時ファイルを削除
+                fs.unlinkSync(file.path);
             } else {
                 response = await chat.sendMessage({ message });
             }
         });
 
-        // AIからの返答をMarkdownからHTMLに変換
         const rawText = response.text || "";
         const htmlReply = marked.parse(rawText);
 
@@ -88,14 +83,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`otomo サーバー起動完了: http://localhost:3000`);
 });
-```[cite: 5]
-
----
-
-### 次の手順
-1. `server.js` を上のコードにすべて上書き保存する。
-2. ターミナルで以下のコマンドを実行してGitHubへ反映させる。
-   ```bash
-   git add server.js
-   git commit -m "Fix syntax error in server.js"
-   git push
