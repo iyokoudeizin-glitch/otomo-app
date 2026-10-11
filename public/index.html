@@ -6,7 +6,7 @@
     <title>otomo - AI音楽学習 & 楽譜プラットフォーム</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Fira+Code:wght@400;600&family=Noto+Music&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-color: #4f46e5;
@@ -21,6 +21,8 @@
             --tab-note: #38bdf8;
             --tab-chord: #f43f5e;
             --tab-fret-bg: #1e293b;
+            --font-music: "Noto Music", "Segoe UI Symbol", "Apple Symbols", serif;
+            --font-mono: "Fira Code", ui-monospace, Consolas, monospace;
         }
 
         * {
@@ -362,82 +364,135 @@
         }
 
         /* ピアノ用五線譜スタイル */
-        #score-container {
-            background: white;
-            padding: 10px;
+        #score-box {
+            background: #ffffff;
+            padding: 12px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
             width: 100%;
-            display: flex;
-            justify-content: center;
-            max-height: 350px;
-            overflow-y: auto;
+            max-height: 380px;
+            overflow: auto;
         }
 
-        canvas {
-            border: 1px solid #ccc;
+        #staffCanvas {
+            display: block;
             background-color: #fff;
         }
 
         /* ツールバー */
-        .note-selector {
+        .toolbar {
             display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            justify-content: center;
+            gap: 0.75rem 1.25rem;
             flex-wrap: wrap;
+            align-items: center;
             background: #f1f5f9;
             padding: 0.75rem;
             border-radius: 8px;
             width: 100%;
         }
 
-        .note-selector-group {
+        .tgroup {
             display: flex;
-            gap: 0.3rem;
+            gap: 0.35rem;
             align-items: center;
+            flex-wrap: wrap;
         }
 
-        .note-btn {
-            background: white;
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
+        .tlabel {
             font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
+            font-weight: 700;
+            color: var(--text-sub);
+            margin-right: 0.2rem;
         }
 
-        .note-btn.active {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
+        select {
+            font: inherit;
+            font-size: 0.9rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: white;
         }
 
         .keyboard {
             display: flex;
-            position: relative;
-            background: #333;
-            padding: 10px 10px 0 10px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            margin-top: 5px;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+            width: 100%;
         }
 
-        .key { user-select: none; cursor: pointer; }
+        .octave {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-sub);
+        }
+
+        .piano-keys-container {
+            width: 100%;
+            max-width: 560px;
+            height: 160px;
+            background: #2a2d3a;
+            padding: 10px 10px 0;
+            border-radius: 10px;
+            display: flex;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .keys {
+            position: relative;
+            flex: 1;
+            display: flex;
+        }
+
+        .key {
+            padding: 0;
+            border-radius: 0 0 6px 6px;
+            user-select: none;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
         .white-key {
-            width: 45px; height: 150px; background: white; border: 1px solid #ccc;
-            border-radius: 0 0 5px 5px; display: flex; align-items: flex-end;
-            justify-content: center; padding-bottom: 10px; font-weight: bold; font-size: 0.85rem; color: #555; box-sizing: border-box;
+            flex: 1;
+            height: 100%;
+            background: #ffffff;
+            color: #1b1f33;
+            border: 1px solid #9aa1b5;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 8px;
+            font-size: 0.85rem;
         }
-        .white-key:active { background: #eee; }
+        .white-key:hover { background: #eef0f7; }
+        .white-key.pressed, .white-key:active { background: #c7cbf5; }
+
         .black-key {
-            width: 26px; height: 95px; background: #222; position: absolute;
-            border-radius: 0 0 3px 3px; z-index: 2; margin-left: -13px;
+            position: absolute;
+            top: 0;
+            width: 8%;
+            height: 60%;
+            background: #14161f;
+            color: #c9cde0;
+            border: 1px solid #000;
+            transform: translateX(-50%);
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 6px;
+            font-size: 0.7rem;
         }
-        .black-key:active { background: #444; }
+        .black-key:hover { background: #2c3040; }
+        .black-key.pressed, .black-key:active { background: var(--primary-color); }
+
+        .kbd { font-family: var(--font-mono); font-size: 0.65rem; opacity: 0.6; font-weight: 400; }
+        .kname { font-size: 0.68rem; color: #4a5168; font-family: var(--font-mono); font-weight: 400; }
 
         /* ギターTAB譜エディタスタイル */
         .guitar-generator-wrapper {
@@ -456,7 +511,7 @@
         }
 
         .input-group { display: flex; flex-direction: column; gap: 8px; }
-        .input-group label { font-size: 0.9rem; font-weight: 500; color: #e2e8f0; display: flex; justify-content: space-between; }
+        .input-group label { font-size: 0.9rem; font-weight: 500; color: #e2e8f0; display: flex; justify-content: space-between; flex-wrap: wrap; }
 
         .guitar-chord-input {
             width: 100%;
@@ -500,29 +555,34 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             overflow-x: auto;
         }
-        .tab-grid { display: flex; flex-direction: column; min-width: max-content; font-family: 'Fira Code', monospace; }
-        .tab-row { display: flex; align-items: center; height: 30px; position: relative; }
-        .chord-row { height: 32px; margin-bottom: 6px; }
+        .diagram-row { display: flex; margin-left: 70px; margin-bottom: 8px; min-width: max-content; }
+        .diagram { width: 72px; display: flex; justify-content: center; color: #c9cde0; }
+        .diagram.active { color: #fcd34d; }
 
-        .string-label { width: 65px; font-size: 0.8rem; font-weight: 600; color: var(--text-sub); text-align: right; padding-right: 12px; }
-        .chord-header-space { width: 65px; }
-        .chord-badge { width: 70px; text-align: center; font-weight: 700; font-size: 1rem; color: var(--tab-chord); }
+        .tab-grid { display: flex; flex-direction: column; min-width: max-content; font-family: 'Fira Code', monospace; }
+        .tab-row { display: flex; align-items: center; height: 32px; position: relative; }
+        .chord-row { height: 34px; margin-bottom: 4px; }
+
+        .string-label { width: 70px; font-size: 0.8rem; font-weight: 600; color: #a3abc7; text-align: right; padding-right: 12px; }
+        .chord-badge { width: 72px; text-align: center; font-weight: 700; font-size: 1rem; color: #fb7185; border-radius: 6px; }
+        .chord-badge.unknown { color: #fcd34d; text-decoration: underline wavy; }
+        .chord-badge.active { background: rgba(251, 113, 133, 0.22); outline: 2px solid #fb7185; }
 
         .string-line-container { display: flex; align-items: center; position: relative; flex: 1; }
-        .string-line { position: absolute; left: 0; right: 0; top: 50%; height: 1.5px; background-color: var(--tab-string); z-index: 1; }
+        .string-line { position: absolute; left: 0; right: 0; top: 50%; height: 1.5px; background-color: #59607e; z-index: 1; }
         .tab-row:nth-child(5) .string-line { height: 2px; }
         .tab-row:nth-child(6) .string-line { height: 2.5px; }
         .tab-row:nth-child(7) .string-line { height: 3px; }
 
-        .fret-slot { width: 70px; display: flex; justify-content: center; align-items: center; z-index: 2; }
-        .fret-number {
-            width: 24px; height: 24px; border-radius: 5px;
-            background: var(--tab-fret-bg); border: 1px solid rgba(255, 255, 255, 0.15);
-            color: var(--tab-note); font-weight: 600; font-size: 0.85rem;
+        .fret-slot { width: 72px; display: flex; justify-content: center; align-items: center; z-index: 2; }
+        .fret {
+            min-width: 26px; height: 26px; padding: 0 3px; border-radius: 5px;
+            background: #1c2140; border: 1px solid #3d4466;
+            color: #7dd3fc; font-weight: 600; font-size: 0.9rem;
             display: flex; align-items: center; justify-content: center;
         }
-        .fret-number.mute { color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); }
-        .fret-number.open { color: #10b981; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); }
+        .fret.mute { color: #fca5a5; background: #2a1016; border-color: #7f1d1d; }
+        .fret.open { color: #6ee7b7; background: #0b2a22; border-color: #065f46; }
 
         .toast {
             position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white;
@@ -530,6 +590,7 @@
             opacity: 0; transform: translateY(50px); transition: all 0.3s ease; z-index: 2000;
         }
         .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { background: #b91c1c; }
 
         .modal-footer {
             padding: 1rem 2rem;
@@ -576,15 +637,15 @@
                 <div class="card-body">
                     <div class="metronome-display" id="tempo-display">120 BPM</div>
                     <div class="metronome-controls">
-                        <span>60</span>
-                        <input type="range" id="tempo-slider" min="40" max="200" value="120">
-                        <span>200</span>
+                        <span>40</span>
+                        <input type="range" id="tempo-slider" min="40" max="240" value="120">
+                        <span>240</span>
                     </div>
                     <button type="button" id="metronome-btn">スタート</button>
                 </div>
             </div>
 
-            <!-- 追加: Webチューナー -->
+            <!-- Webチューナー -->
             <div class="card">
                 <div class="card-header">🎸 Webチューナー</div>
                 <div class="card-body">
@@ -628,86 +689,93 @@
                 <button type="button" class="secondary" id="btn-close-modal">閉じる</button>
             </div>
             <div class="modal-body">
-                <!-- ピアノ用 五線譜キャンバスビュー -->
+                <!-- ピアノ用 五線譜セクション -->
                 <div id="modal-piano-section" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-                    
-                    <!-- 音符・休符選択ツールバー -->
-                    <div class="note-selector">
-                        <span style="font-weight: bold; font-size: 0.85rem; color: var(--text-sub);">音符の長さ:</span>
-                        <div class="note-selector-group">
-                            <button type="button" class="note-btn" onclick="setNoteDuration(4, this)">全音符</button>
-                            <button type="button" class="note-btn" onclick="setNoteDuration(2, this)">2分</button>
-                            <button type="button" class="note-btn active" onclick="setNoteDuration(1, this)">4分</button>
-                            <button type="button" class="note-btn" onclick="setNoteDuration(0.5, this)">8分</button>
-                            <button type="button" class="note-btn" onclick="setNoteDuration(0.25, this)">16分</button>
+                    <div class="toolbar">
+                        <div class="tgroup">
+                            <span class="tlabel">長さ</span>
+                            <button type="button" class="secondary" data-dur="4" aria-pressed="false">全音符</button>
+                            <button type="button" class="secondary" data-dur="2" aria-pressed="false">2分</button>
+                            <button type="button" class="secondary" data-dur="1" aria-pressed="true" style="background: var(--primary-color);">4分</button>
+                            <button type="button" class="secondary" data-dur="0.5" aria-pressed="false">8分</button>
+                            <button type="button" class="secondary" data-dur="0.25" aria-pressed="false">16分</button>
+                            <button type="button" class="secondary" id="add-rest">＋休符</button>
                         </div>
-                        <span style="font-weight: bold; font-size: 0.85rem; color: var(--text-sub); margin-left: 0.5rem;">休符の挿入:</span>
-                        <div class="note-selector-group">
-                            <button type="button" class="note-btn" onclick="addRest(4)">全休符</button>
-                            <button type="button" class="note-btn" onclick="addRest(2)">2分休符</button>
-                            <button type="button" class="note-btn" onclick="addRest(1)">4分休符</button>
-                            <button type="button" class="note-btn" onclick="addRest(0.5)">8分休符</button>
-                            <button type="button" class="note-btn" onclick="addRest(0.25)">16分休符</button>
+                        <div class="tgroup">
+                            <span class="tlabel">黒鍵</span>
+                            <button type="button" class="secondary" data-acc="#" aria-pressed="true" style="background: var(--primary-color);">♯ シャープ</button>
+                            <button type="button" class="secondary" data-acc="b" aria-pressed="false">♭ フラット</button>
+                        </div>
+                        <div class="tgroup">
+                            <label class="tlabel" for="piano-ts">拍子</label>
+                            <select id="piano-ts">
+                                <option value="4">4/4</option>
+                                <option value="3">3/4</option>
+                                <option value="2">2/4</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div id="score-container">
-                        <canvas id="staffCanvas" width="750" height="150"></canvas>
+                    <div id="score-box">
+                        <canvas id="staffCanvas" width="750" height="230"></canvas>
                     </div>
 
                     <div class="keyboard">
-                        <div class="key white-key" onclick="playAndAddNote('C4', 0)">ド</div>
-                        <div class="key black-key" style="left: 41px;" onclick="playAndAddNote('C#4', 0.5)"></div>
-                        <div class="key white-key" onclick="playAndAddNote('D4', 1)">レ</div>
-                        <div class="key black-key" style="left: 86px;" onclick="playAndAddNote('D#4', 1.5)"></div>
-                        <div class="key white-key" onclick="playAndAddNote('E4', 2)">ミ</div>
-                        <div class="key white-key" onclick="playAndAddNote('F4', 3)">ファ</div>
-                        <div class="key black-key" style="left: 176px;" onclick="playAndAddNote('F#4', 3.5)"></div>
-                        <div class="key white-key" onclick="playAndAddNote('G4', 4)">ソ</div>
-                        <div class="key black-key" style="left: 221px;" onclick="playAndAddNote('G#4', 4.5)"></div>
-                        <div class="key white-key" onclick="playAndAddNote('A4', 5)">ラ</div>
-                        <div class="key black-key" style="left: 266px;" onclick="playAndAddNote('A#4', 5.5)"></div>
-                        <div class="key white-key" onclick="playAndAddNote('B4', 6)">シ</div>
-                        <div class="key white-key" onclick="playAndAddNote('C5', 7)">高いド</div>
+                        <div class="octave">
+                            <button type="button" class="secondary" id="oct-down">◀ 低く</button>
+                            <span id="oct-label">C4〜C5</span>
+                            <button type="button" class="secondary" id="oct-up">高く ▶</button>
+                        </div>
+                        <div class="piano-keys-container"><div class="keys" id="keys"></div></div>
                     </div>
-                    <div style="display: flex; gap: 0.75rem; width: 100%; justify-content: center; margin-top: 0.5rem;">
-                        <!-- 追加: 再生コントロールボタン -->
-                        <button type="button" class="success" id="play-score-btn" onclick="playScore()">▶ 楽譜を再生</button>
-                        <button type="button" class="secondary" onclick="pianoNotesHistory.pop(); redrawStaff();">1つ消す</button>
-                        <button type="button" class="danger" onclick="pianoNotesHistory = []; redrawStaff();">すべて消す</button>
+
+                    <div style="display: flex; gap: 0.75rem; width: 100%; justify-content: center; margin-top: 0.5rem; flex-wrap: wrap;">
+                        <button type="button" class="success" id="play-score">▶ 再生</button>
+                        <button type="button" class="secondary" id="undo">↶ 1つ戻す</button>
+                        <button type="button" class="secondary" id="redo">↷ やり直す</button>
+                        <button type="button" class="danger" id="clear">すべて消す</button>
+                        <button type="button" id="score-img">画像にする</button>
+                    </div>
+                    <div id="score-img-out" hidden style="width:100%; text-align:center;">
+                        <img id="score-img-el" alt="楽譜の画像" style="max-width:100%; border:1px solid #ccc; border-radius:8px;">
                     </div>
                 </div>
 
-                <!-- ギター用 TAB譜ジェネレーターセクション -->
+                <!-- ギター用 TAB譜セクション -->
                 <div id="modal-guitar-section" class="guitar-generator-wrapper" style="display: none;">
                     <div class="generator-card">
                         <div class="input-group">
                             <label for="chordInput">
                                 <span>コード進行を入力</span>
-                                <span style="font-size: 0.8rem; color: var(--text-muted);">カンマまたはスペース区切り</span>
+                                <span style="font-size: 0.8rem; color: #a3abc7;">カンマまたはスペース区切り（例: C, G, Am, F）</span>
                             </label>
                             <input type="text" id="chordInput" class="guitar-chord-input" placeholder="例: C, G, Am, F" value="C, G, Am, F" spellcheck="false">
+                            <p id="chord-warn" style="color: #fcd34d; font-size: 0.85rem; margin-top: 5px;"></p>
                         </div>
                         <div class="quick-buttons">
                             <span style="font-size: 0.8rem; color: var(--text-sub);">プリセット:</span>
-                            <button class="chip-btn" onclick="setChords('C, G, Am, F')">王道進行 (C-G-Am-F)</button>
-                            <button class="chip-btn" onclick="setChords('F, G, Em, Am')">小室進行 (F-G-Em-Am)</button>
-                            <button class="chip-btn" onclick="setChords('Dm, G, C, Am')">ツーファイブ (Dm-G-C-Am)</button>
+                            <button class="chip-btn" onclick="setChords('C, G, Am, F')">王道進行</button>
+                            <button class="chip-btn" onclick="setChords('F, G, Em, Am')">小室進行</button>
+                            <button class="chip-btn" onclick="setChords('Dm7, G7, CM7, Am7')">ツーファイブ</button>
                         </div>
                     </div>
 
                     <div class="generator-card">
                         <div class="output-header">
-                            <div class="output-title">生成されたタブ譜</div>
+                            <div class="output-title">生成されたタブ譜とコード押さえ方</div>
                             <div class="btn-group">
-                                <button class="action-btn btn-secondary" style="background: rgba(255,255,255,0.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1);" onclick="copyTextTab()">📋 テキストコピー</button>
-                                <button class="action-btn btn-secondary" style="background: rgba(255,255,255,0.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1);" onclick="downloadTextTab()">📄 TXT保存</button>
-                                <button class="action-btn btn-primary" style="background: var(--primary-color); color: white;" onclick="downloadImageTab()">🖼️ 画像保存 (PNG)</button>
+                                <button class="action-btn success" id="play-chords">▶ 再生</button>
+                                <button class="action-btn secondary" onclick="copyTextTab()">📋 テキストコピー</button>
+                                <button class="action-btn" style="background: var(--primary-color);" onclick="downloadImageTab()">🖼️ 画像保存 (PNG)</button>
                             </div>
                         </div>
 
                         <div class="tab-viewport" id="tabViewport">
+                            <div class="diagram-row" id="diagramRow"></div>
                             <div class="tab-grid" id="tabGrid"></div>
+                        </div>
+                        <div id="tab-img-out" hidden style="margin-top: 15px; text-align: center;">
+                            <img id="tab-img-el" alt="タブ譜画像" style="max-width: 100%; border-radius: 8px;">
                         </div>
                     </div>
                 </div>
@@ -725,15 +793,23 @@
 
     <script>
         // --- 共通 AudioContext ---
-        let audioCtx = null;
+        let audioCtx = null, masterOut = null;
         function getAudioContext() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                masterOut = audioCtx.createDynamicsCompressor();
+                masterOut.connect(audioCtx.destination);
             }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             return audioCtx;
+        }
+        const midiToFreq = (m, a4 = 440) => a4 * Math.pow(2, (m - 69) / 12);
+
+        function showToast(msg, type = 'ok') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast ' + type + ' show';
+            setTimeout(() => t.classList.remove('show'), 2500);
         }
 
         // --- メトロノーム機能 ---
@@ -746,89 +822,75 @@
         const metronomeBtn = document.getElementById('metronome-btn');
 
         tempoSlider.addEventListener('input', (e) => {
-            bpm = e.target.value;
+            bpm = +e.target.value;
             tempoDisplay.textContent = bpm + " BPM";
             if (isPlaying) { stopMetronome(); startMetronome(); }
         });
 
         metronomeBtn.addEventListener('click', () => {
-            if (isPlaying) { stopMetronome(); metronomeBtn.textContent = "スタート"; }
-            else { startMetronome(); metronomeBtn.textContent = "ストップ"; }
+            if (isPlaying) { stopMetronome(); metronomeBtn.textContent = "スタート"; metronomeBtn.classList.remove('ng'); }
+            else { startMetronome(); metronomeBtn.textContent = "ストップ"; metronomeBtn.classList.add('ng'); }
         });
 
+        let nextTime = 0, beat = 0, metroTimer = null;
         function playClick() {
             const ctx = getAudioContext();
             const osc = ctx.createOscillator();
-            const envelope = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(800, ctx.currentTime);
-            envelope.gain.setValueAtTime(1, ctx.currentTime);
-            envelope.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
-            osc.connect(envelope);
-            envelope.connect(ctx.destination);
+            const gain = ctx.createGain();
+            osc.frequency.value = (beat === 0) ? 1600 : 1000;
+            gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime + 0.002);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.05);
+            osc.connect(gain).connect(masterOut);
             osc.start();
-            osc.stop(ctx.currentTime + 0.05);
+            osc.stop(ctx.currentTime + 0.06);
+            beat = (beat + 1) % 4;
         }
 
         function startMetronome() {
+            beat = 0;
             const interval = (60 / bpm) * 1000;
             playClick();
-            timerId = setInterval(playClick, interval);
+            metroTimer = setInterval(playClick, interval);
             isPlaying = true;
         }
 
-        function stopMetronome() { clearInterval(timerId); isPlaying = false; }
+        function stopMetronome() { clearInterval(metroTimer); isPlaying = false; }
 
         // --- Webチューナー機能 ---
-        let tunerStream = null;
-        let tunerAudioCtx = null;
-        let tunerAnalyser = null;
-        let tunerIsListening = false;
-        let tunerAnimationId = null;
-
+        let tunerStream = null, tunerAnalyser = null, tunerIsListening = false, tunerAnimationId = null;
         const tunerBtn = document.getElementById('tuner-btn');
         const tunerNoteEl = document.getElementById('tuner-note');
         const tunerFreqEl = document.getElementById('tuner-freq');
         const tunerCentsEl = document.getElementById('tuner-cents');
         const tunerPointerEl = document.getElementById('tuner-pointer');
-
         const noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
         tunerBtn.addEventListener('click', async () => {
-            if (tunerIsListening) {
-                stopTuner();
-            } else {
-                await startTuner();
-            }
+            if (tunerIsListening) stopTuner(); else await startTuner();
         });
 
         async function startTuner() {
             try {
                 tunerStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                tunerAudioCtx = getAudioContext();
-                const source = tunerAudioCtx.createMediaStreamSource(tunerStream);
-                tunerAnalyser = tunerAudioCtx.createAnalyser();
+                const ctx = getAudioContext();
+                const source = ctx.createMediaStreamSource(tunerStream);
+                tunerAnalyser = ctx.createAnalyser();
                 tunerAnalyser.fftSize = 2048;
                 source.connect(tunerAnalyser);
-
                 tunerIsListening = true;
                 tunerBtn.textContent = "マイクを停止";
                 tunerBtn.classList.add('danger');
-
                 updateTuner();
             } catch (err) {
                 alert("マイクへのアクセスが拒否されたか、利用できません。");
-                console.error(err);
             }
         }
 
         function stopTuner() {
             tunerIsListening = false;
             if (tunerAnimationId) cancelAnimationFrame(tunerAnimationId);
-            if (tunerStream) {
-                tunerStream.getTracks().forEach(track => track.stop());
-                tunerStream = null;
-            }
+            if (tunerStream) { tunerStream.getTracks().forEach(t => t.stop()); tunerStream = null; }
             tunerBtn.textContent = "マイクを起動";
             tunerBtn.classList.remove('danger');
             tunerNoteEl.textContent = "--";
@@ -838,81 +900,45 @@
         }
 
         function autoCorrelate(buf, sampleRate) {
-            let SIZE = buf.length;
-            let rms = 0;
-            for (let i = 0; i < SIZE; i++) {
-                let val = buf[i];
-                rms += val * val;
-            }
+            let SIZE = buf.length, rms = 0;
+            for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
             rms = Math.sqrt(rms / SIZE);
-            if (rms < 0.01) return -1; // 入力信号が小さすぎる場合
-
+            if (rms < 0.01) return -1;
             let r1 = 0, r2 = SIZE - 1, thres = 0.2;
-            for (let i = 0; i < SIZE / 2; i++) {
-                if (Math.abs(buf[i]) < thres) { r1 = i; break; }
-            }
-            for (let i = 1; i < SIZE / 2; i++) {
-                if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
-            }
-
+            for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+            for (let i = 1; i < SIZE / 2; i++) if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
             buf = buf.slice(r1, r2);
             SIZE = buf.length;
-
             let c = new Array(SIZE).fill(0);
-            for (let i = 0; i < SIZE; i++) {
-                for (let j = 0; j < SIZE - i; j++) {
-                    c[i] = c[i] + buf[j] * buf[j + i];
-                }
-            }
-
-            let d = 0;
-            while (c[d] > c[d + 1]) d++;
+            for (let i = 0; i < SIZE; i++) for (let j = 0; j < SIZE - i; j++) c[i] += buf[j] * buf[j + i];
+            let d = 0; while (c[d] > c[d + 1]) d++;
             let maxval = -1, maxpos = -1;
-            for (let i = d; i < SIZE; i++) {
-                if (c[i] > maxval) {
-                    maxval = c[i];
-                    maxpos = i;
-                }
-            }
+            for (let i = d; i < SIZE; i++) if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
             let T0 = maxpos;
-
             let x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
-            let a = (x1 + x3 - 2 * x2) / 2;
-            let b = (x3 - x1) / 2;
+            let a = (x1 + x3 - 2 * x2) / 2, b = (x3 - x1) / 2;
             if (a) T0 = T0 - b / (2 * a);
-
             return sampleRate / T0;
         }
 
         function updateTuner() {
             if (!tunerIsListening) return;
-
             const buf = new Float32Array(2048);
             tunerAnalyser.getFloatTimeDomainData(buf);
-            const pitch = autoCorrelate(buf, tunerAudioCtx.sampleRate);
-
+            const pitch = autoCorrelate(buf, audioCtx.sampleRate);
             if (pitch !== -1) {
                 const noteNum = 12 * (Math.log(pitch / 440) / Math.log(2)) + 69;
                 const noteIndex = Math.round(noteNum);
                 const noteName = noteStrings[noteIndex % 12];
                 const expectedFreq = 440 * Math.pow(2, (noteIndex - 69) / 12);
                 const cents = Math.floor((1200 * Math.log(pitch / expectedFreq)) / Math.log(2));
-
                 tunerNoteEl.textContent = noteName;
                 tunerFreqEl.textContent = pitch.toFixed(1) + " Hz";
                 tunerCentsEl.textContent = (cents >= 0 ? "+" : "") + cents + " cent";
-
                 let pointerPos = 50 + (cents / 50) * 45;
-                pointerPos = Math.max(5, Math.min(95, pointerPos));
-                tunerPointerEl.style.left = pointerPos + "%";
-
-                if (Math.abs(cents) < 5) {
-                    tunerPointerEl.style.background = "#10b981";
-                } else {
-                    tunerPointerEl.style.background = "#f43f5e";
-                }
+                tunerPointerEl.style.left = Math.max(5, Math.min(95, pointerPos)) + "%";
+                tunerPointerEl.style.background = Math.abs(cents) < 5 ? "#10b981" : "#f43f5e";
             }
-
             tunerAnimationId = requestAnimationFrame(updateTuner);
         }
 
@@ -920,20 +946,14 @@
         function openInstrumentModal(inst) {
             document.getElementById('instrument-modal').style.display = 'flex';
             document.getElementById('modal-title').textContent = inst === 'piano' ? '🎹 ピアノ 楽譜エディタ (五線譜)' : '🎸 ギター 楽譜エディタ (TAB譜)';
-            
             document.getElementById('modal-piano-section').style.display = inst === 'piano' ? 'flex' : 'none';
             document.getElementById('modal-guitar-section').style.display = inst === 'guitar' ? 'flex' : 'none';
-            
-            if (inst === 'piano') {
-                setTimeout(redrawStaff, 50);
-            } else {
-                renderTab();
-            }
+            if (inst === 'piano') { buildKeyboard(); redrawStaff(); } else { renderTab(); }
         }
 
         function closeInstrumentModal() {
             document.getElementById('instrument-modal').style.display = 'none';
-            if (isScorePlaying) stopScore();
+            stopScore(); stopChords();
         }
 
         document.getElementById('btn-open-piano').addEventListener('click', () => openInstrumentModal('piano'));
@@ -941,370 +961,367 @@
         document.getElementById('btn-close-modal').addEventListener('click', closeInstrumentModal);
         document.getElementById('btn-close-modal-footer').addEventListener('click', closeInstrumentModal);
 
-        // --- ピアノ楽譜エディタ機能 & 自動再生 ---
-        let pianoNotesHistory = [];
-        let currentDuration = 1; // デフォルトは4分音符 (1拍)
-        let isScorePlaying = false;
-        let scorePlaybackTimeout = null;
+        // --- ピアノ楽譜エディタ機能 ---
+        let pianoNotes = [];
+        let pianoRedo = [];
+        let currentDuration = 1;
+        let currentAcc = '#';
+        let pianoTimeSig = 4;
+        let pianoOctave = 4;
+        let isPianoPlaying = false;
+        let pianoTimers = [];
+        let playIndex = -1;
 
-        const frequencies = {
-            'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13,
-            'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00,
-            'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88, 'C5': 523.25
-        };
-
-        function setNoteDuration(duration, btnElement) {
-            currentDuration = duration;
-            document.querySelectorAll('.note-selector-group .note-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            if (btnElement) btnElement.classList.add('active');
-        }
-
-        function playSound(note, durationInSeconds = 0.8) {
-            const ctx = getAudioContext();
-            
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(frequencies[note], ctx.currentTime);
-            gain.gain.setValueAtTime(0.5, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationInSeconds);
-
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-
-            osc.start();
-            osc.stop(ctx.currentTime + durationInSeconds);
-        }
-
-        function playAndAddNote(noteName, positionStep) {
-            playSound(noteName);
-            pianoNotesHistory.push({
-                type: 'note',
-                noteName,
-                positionStep,
-                duration: currentDuration
-            });
-            redrawStaff();
-        }
-
-        function addRest(duration) {
-            pianoNotesHistory.push({
-                type: 'rest',
-                duration: duration
-            });
-            redrawStaff();
-        }
-
-        // 楽譜の再生機能
-        function playScore() {
-            if (isScorePlaying) {
-                stopScore();
-                return;
-            }
-            if (pianoNotesHistory.length === 0) {
-                showToast("再生する音符がありません");
-                return;
-            }
-
-            isScorePlaying = true;
-            const playBtn = document.getElementById('play-score-btn');
-            playBtn.textContent = "⏹ 再生停止";
-            playBtn.classList.remove('success');
-            playBtn.classList.add('danger');
-
-            const secondsPerBeat = 60 / bpm;
-            let index = 0;
-
-            function playNextStep() {
-                if (!isScorePlaying || index >= pianoNotesHistory.length) {
-                    stopScore();
-                    return;
-                }
-
-                const item = pianoNotesHistory[index];
-                const noteDurationSec = item.duration * secondsPerBeat;
-
-                if (item.type === 'note') {
-                    playSound(item.noteName, noteDurationSec * 0.9);
-                }
-
-                index++;
-                scorePlaybackTimeout = setTimeout(playNextStep, noteDurationSec * 1000);
-            }
-
-            playNextStep();
-        }
-
-        function stopScore() {
-            isScorePlaying = false;
-            if (scorePlaybackTimeout) clearTimeout(scorePlaybackTimeout);
-            const playBtn = document.getElementById('play-score-btn');
-            if (playBtn) {
-                playBtn.textContent = "▶ 楽譜を再生";
-                playBtn.classList.remove('danger');
-                playBtn.classList.add('success');
-            }
-        }
-
+        const WHITE_LETTER = { 0: 0, 2: 1, 4: 2, 5: 3, 7: 4, 9: 5, 11: 6 };
+        const SOLFEGE = ['ド', 'レ', 'ミ', 'ファ', 'ソ', 'ラ', 'シ'];
+        const LETTERS = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+        const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
         const canvas = document.getElementById('staffCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx2d = canvas.getContext('2d');
 
-        function drawSystem(startY) {
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 1;
+        function spell(midi, accPref) {
+            const pc = midi % 12, octave = Math.floor(midi / 12) - 1;
+            if (pc in WHITE_LETTER) return { letter: WHITE_LETTER[pc], octave, acc: '' };
+            if (accPref === 'b') return { letter: WHITE_LETTER[pc + 1], octave, acc: 'b' };
+            return { letter: WHITE_LETTER[pc - 1], octave, acc: '#' };
+        }
 
-            // 5本線描画
+        function playPianoNote(midi, when, dur) {
+            const ctx = getAudioContext();
+            const f = midiToFreq(midi);
+            const out = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(Math.min(6000, f * 8), when);
+            out.gain.setValueAtTime(0.0001, when);
+            out.gain.exponentialRampToValueAtTime(0.3, when + 0.01);
+            out.gain.exponentialRampToValueAtTime(0.0001, when + dur + 0.3);
+            filter.connect(out).connect(masterOut);
+            const osc = ctx.createOscillator();
+            osc.type = 'triangle';
+            osc.frequency.value = f;
+            osc.connect(filter);
+            osc.start(when);
+            osc.stop(when + dur + 0.35);
+        }
+
+        function addPianoItem(item) {
+            pianoNotes.push(item);
+            pianoRedo = [];
+            redrawStaff();
+        }
+
+        function playAndAddNote(midi) {
+            playPianoNote(midi, getAudioContext().currentTime, 0.6);
+            addPianoItem({ t: 'n', midi, d: currentDuration, acc: currentAcc });
+        }
+
+        function buildKeyboard() {
+            const keys = document.getElementById('keys');
+            keys.innerHTML = '';
+            const base = (pianoOctave + 1) * 12;
+            const whites = [0, 2, 4, 5, 7, 9, 11, 12];
+            whites.forEach((semi, wi) => {
+                const midi = base + semi;
+                const name = LETTERS[wi % 7] + (Math.floor(midi / 12) - 1);
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'key white-key';
+                b.dataset.midi = midi;
+                b.innerHTML = `<span>${SOLFEGE[wi % 7]}</span><span class="kname">${name}</span>`;
+                keys.appendChild(b);
+            });
+            [[1, 0], [3, 1], [6, 3], [8, 4], [10, 5]].forEach(([semi, wi]) => {
+                const midi = base + semi;
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'key black-key';
+                b.dataset.midi = midi;
+                b.style.left = ((wi + 1) / whites.length * 100) + '%';
+                keys.appendChild(b);
+            });
+            document.getElementById('oct-label').textContent = `C${pianoOctave}〜C${pianoOctave + 1}`;
+        }
+
+        document.getElementById('keys').addEventListener('click', e => {
+            const k = e.target.closest('.key');
+            if (k) playAndAddNote(+k.dataset.midi);
+        });
+
+        document.querySelectorAll('[data-dur]').forEach(b => {
+            b.addEventListener('click', () => {
+                currentDuration = +b.dataset.dur;
+                document.querySelectorAll('[data-dur]').forEach(x => { x.style.background = ''; x.setAttribute('aria-pressed', 'false'); });
+                b.style.background = 'var(--primary-color)';
+                b.setAttribute('aria-pressed', 'true');
+            });
+        });
+
+        document.querySelectorAll('[data-acc]').forEach(b => {
+            b.addEventListener('click', () => {
+                currentAcc = b.dataset.acc;
+                document.querySelectorAll('[data-acc]').forEach(x => { x.style.background = ''; x.setAttribute('aria-pressed', 'false'); });
+                b.style.background = 'var(--primary-color)';
+                b.setAttribute('aria-pressed', 'true');
+            });
+        });
+
+        document.getElementById('add-rest').addEventListener('click', () => addPianoItem({ t: 'r', d: currentDuration }));
+        document.getElementById('oct-down').addEventListener('click', () => { pianoOctave = Math.max(2, pianoOctave - 1); buildKeyboard(); });
+        document.getElementById('oct-up').addEventListener('click', () => { pianoOctave = Math.min(5, pianoOctave + 1); buildKeyboard(); });
+        document.getElementById('piano-ts').addEventListener('change', e => { pianoTimeSig = +e.target.value; redrawStaff(); });
+
+        document.getElementById('undo').addEventListener('click', () => {
+            if (!pianoNotes.length) return;
+            pianoRedo.push(pianoNotes.pop());
+            redrawStaff();
+        });
+        document.getElementById('redo').addEventListener('click', () => {
+            if (!pianoRedo.length) return;
+            pianoNotes.push(pianoRedo.pop());
+            redrawStaff();
+        });
+        document.getElementById('clear').addEventListener('click', () => {
+            pianoNotes = []; pianoRedo = []; redrawStaff();
+        });
+
+        const GAP = 10, SYS_H = 210, LEFT = 80, PX_PER_BEAT = 40;
+        const TREBLE_BOTTOM_STEP = 33, BASS_BOTTOM_STEP = 18;
+
+        function staffGeometry(line) {
+            const trebleTop = 20 + line * SYS_H + 30;
+            const bassTop = trebleTop + 4 * GAP + 50;
+            return { trebleTop, trebleBottom: trebleTop + 4 * GAP, bassTop, bassBottom: bassTop + 4 * GAP };
+        }
+
+        function layoutScore(W) {
+            const ts = pianoTimeSig;
+            const measures = []; let beat = 0;
+            pianoNotes.forEach((it, i) => {
+                const m = Math.floor(beat / ts + 1e-9);
+                while (measures.length <= m) measures.push({ items: [], beats: 0 });
+                measures[m].items.push(i); measures[m].beats += it.d; beat += it.d;
+            });
+            if (!measures.length || Math.abs(beat / ts - Math.round(beat / ts)) < 1e-9) measures.push({ items: [], beats: 0 });
+            measures.forEach(ms => {
+                ms.width = 30 + ms.items.reduce((s, i) => s + Math.max(24, pianoNotes[i].d * PX_PER_BEAT), 0) + Math.max(0, ts - ms.beats) * PX_PER_BEAT;
+            });
+            const avail = W - LEFT - 10;
+            const pos = []; let line = 0, x = LEFT;
+            measures.forEach((ms, mi) => {
+                if (x > LEFT && x + ms.width > LEFT + avail) { line++; x = LEFT; }
+                ms.line = line; ms.x = x; let ix = x + 15;
+                ms.items.forEach(i => { pos[i] = { x: ix, line }; ix += Math.max(24, pianoNotes[i].d * PX_PER_BEAT); });
+                x += ms.width; ms.last = mi === measures.length - 1;
+            });
+            return { measures, pos, lines: line + 1 };
+        }
+
+        function drawStaffLines(y0, x1, x2) {
             for (let i = 0; i < 5; i++) {
-                let y = startY + i * 12;
-                ctx.beginPath();
-                ctx.moveTo(20, y);
-                ctx.lineTo(canvas.width - 20, y);
-                ctx.stroke();
+                ctx2d.beginPath(); ctx2d.moveTo(x1, y0 + i * GAP); ctx2d.lineTo(x2, y0 + i * GAP); ctx2d.stroke();
             }
-
-            // ト音記号
-            ctx.font = '42px serif';
-            ctx.fillStyle = '#000';
-            ctx.fillText('🎼', 22, startY + 40);
         }
 
         function redrawStaff() {
-            const beatsPerLine = 16; // 1行あたり16拍分（例: 4/4拍子で4小節）
-            const pixelsPerBeat = 38; // 1拍あたりの横幅ピクセル
-            const lineSpacingY = 110; // 行ごとの高さの幅
+            const box = document.getElementById('score-box');
+            const W = Math.max(300, box.clientWidth - 24);
+            const layout = layoutScore(W);
+            const H = Math.max(230, layout.lines * SYS_H + 20);
+            canvas.width = W; canvas.height = H;
+            ctx2d.fillStyle = '#ffffff'; ctx2d.fillRect(0, 0, W, H);
+            ctx2d.strokeStyle = '#111'; ctx2d.fillStyle = '#111';
 
-            // 総行数を算出
-            let currentLineBeats = 0;
-            let totalLines = 1;
+            for (let l = 0; l < layout.lines; l++) {
+                const g = staffGeometry(l);
+                const lineMeasures = layout.measures.filter(ms => ms.line === l);
+                const xEnd = lineMeasures[lineMeasures.length - 1].x + lineMeasures[lineMeasures.length - 1].width;
+                ctx2d.lineWidth = 1; drawStaffLines(g.trebleTop, 15, xEnd); drawStaffLines(g.bassTop, 15, xEnd);
+                ctx2d.lineWidth = 2; ctx2d.beginPath(); ctx2d.moveTo(15, g.trebleTop); ctx2d.lineTo(15, g.bassBottom); ctx2d.stroke();
+                ctx2d.font = '32px serif'; ctx2d.fillText('𝄞', 20, g.trebleTop + 3.3 * GAP); ctx2d.fillText('𝄢', 20, g.bassTop + GAP * 1.1);
 
-            pianoNotesHistory.forEach(item => {
-                if (currentLineBeats + item.duration > beatsPerLine) {
-                    totalLines++;
-                    currentLineBeats = item.duration;
-                } else {
-                    currentLineBeats += item.duration;
-                }
-            });
-
-            // 行数に合わせてキャンバスの高さを動的に調整
-            canvas.height = Math.max(150, totalLines * lineSpacingY + 30);
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 各行の五線譜を描画
-            for (let l = 0; l < totalLines; l++) {
-                drawSystem(30 + l * lineSpacingY);
+                ctx2d.lineWidth = 1;
+                lineMeasures.forEach(ms => {
+                    const x = ms.x + ms.width;
+                    if (ms.last) ctx2d.setLineDash([3, 3]);
+                    ctx2d.beginPath(); ctx2d.moveTo(x, g.trebleTop); ctx2d.lineTo(x, g.bassBottom); ctx2d.stroke();
+                    ctx2d.setLineDash([]);
+                });
             }
 
-            // 音符・休符の描画
-            let lineIndex = 0;
-            let lineBeat = 0;
-            const startX = 85;
-
-            pianoNotesHistory.forEach(item => {
-                // 行あふれの判定と改行処理
-                if (lineBeat + item.duration > beatsPerLine) {
-                    lineIndex++;
-                    lineBeat = 0;
-                }
-
-                const baseStartY = 30 + lineIndex * lineSpacingY;
-                const bottomLineY = baseStartY + 48; // 五線譜の最下線 (E4)
-                const x = startX + lineBeat * pixelsPerBeat;
-
-                if (item.type === 'rest') {
-                    // --- 休符の描画 ---
-                    drawRest(x, baseStartY, item.duration);
+            pianoNotes.forEach((item, i) => {
+                const { x, line } = layout.pos[i];
+                const g = staffGeometry(line);
+                const active = i === playIndex;
+                ctx2d.strokeStyle = ctx2d.fillStyle = active ? '#c2410c' : '#111';
+                if (item.t === 'r') {
+                    ctx2d.font = '20px sans-serif';
+                    ctx2d.fillText(item.d === 1 ? '𝄽' : '𝄾', x - 5, g.trebleTop + 24);
                 } else {
-                    // --- 音符の描画 ---
-                    drawNote(x, bottomLineY, item);
-                }
+                    const sp = spell(item.midi, item.acc);
+                    const step = sp.octave * 7 + sp.letter;
+                    const treble = item.midi >= 60;
+                    const bottomY = treble ? g.trebleBottom : g.bassBottom;
+                    const rel = step - (treble ? TREBLE_BOTTOM_STEP : BASS_BOTTOM_STEP);
+                    const y = bottomY - rel * GAP / 2;
 
-                lineBeat += item.duration;
+                    ctx2d.beginPath(); ctx2d.ellipse(x, y, 5.5, 4, -Math.PI / 6, 0, Math.PI * 2);
+                    if (item.d >= 2) ctx2d.stroke(); else ctx2d.fill();
+                }
             });
         }
 
-        function drawRest(x, baseStartY, duration) {
-            ctx.fillStyle = '#000';
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 1.5;
-
-            const centerY = baseStartY + 24; // 五線譜の中央
-
-            if (duration === 4) { // 全休符
-                ctx.fillRect(x - 6, baseStartY + 12, 12, 6);
-            } else if (duration === 2) { // 2分休符
-                ctx.fillRect(x - 6, baseStartY + 18, 12, 6);
-            } else if (duration === 1) { // 4分休符
-                ctx.font = '22px sans-serif';
-                ctx.fillText('𝄽', x - 5, centerY + 8);
-            } else if (duration === 0.5) { // 8分休符
-                ctx.font = '22px sans-serif';
-                ctx.fillText('𝄾', x - 5, centerY + 8);
-            } else if (duration === 0.25) { // 16分休符
-                ctx.font = '22px sans-serif';
-                ctx.fillText('𝄿', x - 5, centerY + 8);
-            }
+        function playScore() {
+            if (isPianoPlaying) { stopScore(); return; }
+            if (!pianoNotes.length) { showToast('再生する音符がありません', 'error'); return; }
+            const ctx = getAudioContext();
+            const spb = 60 / bpm;
+            const start = ctx.currentTime + 0.1;
+            let t = 0; isPianoPlaying = true;
+            pianoNotes.forEach((item, i) => {
+                const when = start + t;
+                const dur = item.d * spb;
+                if (item.t === 'n') playPianoNote(item.midi, when, dur * 0.9);
+                pianoTimers.push(setTimeout(() => { playIndex = i; redrawStaff(); }, (when - ctx.currentTime) * 1000));
+                t += dur;
+            });
+            pianoTimers.push(setTimeout(stopScore, (start + t - ctx.currentTime) * 1000 + 200));
+            const b = document.getElementById('play-score');
+            b.textContent = '■ 停止'; b.classList.replace('success', 'danger');
         }
 
-        function drawNote(x, bottomLineY, item) {
-            const step = Math.floor(item.positionStep);
-            const isSharp = item.noteName.includes('#');
-            const lineSpacing = 6;
-            const y = bottomLineY - step * lineSpacing;
-
-            // シャープ記号
-            if (isSharp) {
-                ctx.font = '14px serif';
-                ctx.fillStyle = '#000';
-                ctx.fillText('♯', x - 14, y + 5);
-            }
-
-            // 下加線（ド（C4）用）
-            if (step === 0) {
-                ctx.beginPath();
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = 1;
-                ctx.moveTo(x - 8, y);
-                ctx.lineTo(x + 8, y);
-                ctx.stroke();
-            }
-
-            // 符頭（音符のたま）の描画
-            ctx.beginPath();
-            ctx.ellipse(x, y, 5.5, 4, -Math.PI / 6, 0, 2 * Math.PI);
-
-            if (item.duration === 4) { // 全音符
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-                return; // 符幹（棒）なし
-            } else if (item.duration === 2) { // 2分音符
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-            } else { // 4分, 8分, 16分音符
-                ctx.fillStyle = '#000';
-                ctx.fill();
-            }
-
-            // 符幹（棒）の描画
-            ctx.beginPath();
-            ctx.lineWidth = 1.5;
-            ctx.strokeStyle = '#000';
-            ctx.moveTo(x + 4.5, y);
-            ctx.lineTo(x + 4.5, y - 22);
-            ctx.stroke();
-
-            // 旗（8分音符・16分音符）の描画
-            if (item.duration === 0.5) { // 8分音符
-                ctx.beginPath();
-                ctx.moveTo(x + 4.5, y - 22);
-                ctx.quadraticCurveTo(x + 12, y - 16, x + 10, y - 8);
-                ctx.stroke();
-            } else if (item.duration === 0.25) { // 16分音符
-                ctx.beginPath();
-                ctx.moveTo(x + 4.5, y - 22);
-                ctx.quadraticCurveTo(x + 12, y - 16, x + 10, y - 8);
-                ctx.moveTo(x + 4.5, y - 16);
-                ctx.quadraticCurveTo(x + 12, y - 10, x + 10, y - 2);
-                ctx.stroke();
-            }
+        function stopScore() {
+            pianoTimers.forEach(clearTimeout); pianoTimers = [];
+            isPianoPlaying = false; playIndex = -1; redrawStaff();
+            const b = document.getElementById('play-score');
+            b.textContent = '▶ 再生'; b.classList.replace('danger', 'success');
         }
+
+        document.getElementById('play-score').addEventListener('click', playScore);
+        document.getElementById('score-img').addEventListener('click', () => {
+            if (!pianoNotes.length) { showToast('音符がありません', 'error'); return; }
+            document.getElementById('score-img-el').src = canvas.toDataURL('image/png');
+            document.getElementById('score-img-out').hidden = false;
+        });
 
         // --- ギターTAB譜ジェネレーター機能 ---
         const chordDb = {
             "C": ["0", "1", "0", "2", "3", "x"], "D": ["2", "3", "2", "0", "x", "x"], "E": ["0", "0", "1", "2", "2", "0"],
             "F": ["1", "1", "2", "3", "3", "1"], "G": ["3", "0", "0", "0", "2", "3"], "A": ["0", "2", "2", "2", "0", "x"],
-            "B": ["2", "4", "4", "4", "2", "x"], "Cm": ["3", "4", "5", "5", "3", "x"], "Dm": ["1", "3", "2", "0", "x", "x"],
-            "Em": ["0", "0", "0", "2", "2", "0"], "Fm": ["1", "1", "1", "3", "3", "1"], "Gm": ["3", "3", "3", "5", "5", "3"],
-            "Am": ["0", "1", "2", "2", "0", "x"], "Bm": ["2", "3", "4", "4", "2", "x"], "C7": ["0", "1", "3", "2", "3", "x"],
-            "D7": ["2", "1", "2", "0", "x", "x"], "E7": ["0", "0", "1", "0", "2", "0"], "G7": ["1", "0", "0", "0", "2", "3"],
-            "A7": ["0", "2", "0", "2", "0", "x"], "B7": ["2", "0", "2", "1", "2", "x"], "CM7": ["0", "0", "0", "2", "3", "x"],
-            "FM7": ["0", "1", "2", "3", "x", "x"], "AM7": ["0", "2", "1", "2", "0", "x"], "Dm7": ["1", "1", "2", "0", "x", "x"],
-            "Em7": ["0", "0", "0", "0", "2", "0"], "Am7": ["0", "1", "0", "2", "0", "x"], "Csus4": ["1", "1", "0", "3", "3", "x"],
-            "Dsus4": ["3", "3", "2", "0", "x", "x"], "Gsus4": ["3", "1", "0", "0", "2", "3"]
+            "Dm": ["1", "3", "2", "0", "x", "x"], "Em": ["0", "0", "0", "2", "2", "0"], "Am": ["0", "1", "2", "2", "0", "x"],
+            "C7": ["0", "1", "3", "2", "3", "x"], "D7": ["2", "1", "2", "0", "x", "x"], "E7": ["0", "0", "1", "0", "2", "0"],
+            "G7": ["1", "0", "0", "0", "2", "3"], "A7": ["0", "2", "0", "2", "0", "x"], "CM7": ["0", "0", "0", "2", "3", "x"],
+            "Dm7": ["1", "1", "2", "0", "x", "x"], "Em7": ["0", "0", "0", "0", "2", "0"], "Am7": ["0", "1", "0", "2", "0", "x"]
         };
-
         const stringLabels = ["1st (E)", "2nd (B)", "3rd (G)", "4th (D)", "5th (A)", "6th (E)"];
         const chordInput = document.getElementById('chordInput');
         const tabGrid = document.getElementById('tabGrid');
+        const diagramRow = document.getElementById('diagramRow');
 
-        function formatChordName(raw) {
-            if (!raw) return "";
-            let c = raw.trim();
+        function formatChord(raw) {
+            if (!raw) return ""; let c = raw.trim();
             return c.length === 1 ? c.toUpperCase() : c.charAt(0).toUpperCase() + c.slice(1);
         }
 
-        function renderTab() {
-            const chords = chordInput.value.split(/[, ]+/).map(c => formatChordName(c)).filter(c => c !== "");
-            tabGrid.innerHTML = "";
+        function chordDiagramSvg(frets) {
+            if (!frets) return '<svg width="50" height="65"><text x="25" y="40" text-anchor="middle" fill="#fff">?</text></svg>';
+            let s = '<svg width="50" height="65" viewBox="0 0 50 65" stroke="#fff" fill="#fff">';
+            for (let i = 0; i < 6; i++) s += `<line x1="${8 + i*7}" y1="10" x2="${8 + i*7}" y2="50" stroke-width="1"/>`;
+            for (let r = 0; r <= 4; r++) s += `<line x1="8" y1="${10 + r*10}" x2="43" y2="${10 + r*10}" stroke-width="${r===0?2:1}"/>`;
+            [...frets].reverse().forEach((f, i) => {
+                const x = 8 + i * 7;
+                if (f === 'x') s += `<text x="${x}" y="8" font-size="8" text-anchor="middle" stroke="none">×</text>`;
+                else if (f === '0') s += `<circle cx="${x}" cy="6" r="2" fill="none" stroke-width="1"/>`;
+                else s += `<circle cx="${x}" cy="${10 + (Number(f)-0.5)*10}" r="3" stroke="none"/>`;
+            });
+            return s + '</svg>';
+        }
 
-            if (chords.length === 0) {
-                tabGrid.innerHTML = '<div style="color: var(--text-muted, #94a3b8); padding: 20px; text-align: center;">コードを入力するとここにタブ譜が表示されます</div>';
+        function renderTab() {
+            const chords = chordInput.value.split(/[, ]+/).map(c => formatChord(c)).filter(Boolean);
+            tabGrid.innerHTML = ''; diagramRow.innerHTML = '';
+            const unknown = chords.filter(c => !chordDb[c]);
+            document.getElementById('chord-warn').textContent = unknown.length ? `未登録のコードが含まれています: ${unknown.join(', ')}` : '';
+
+            if (!chords.length) {
+                tabGrid.innerHTML = '<div style="color: #94a3b8; padding: 20px; text-align: center;">コードを入力してください</div>';
                 return;
             }
 
             const chordRow = document.createElement('div');
             chordRow.className = 'tab-row chord-row';
-            chordRow.appendChild(Object.assign(document.createElement('div'), { className: 'chord-header-space' }));
-            chords.forEach(chord => {
-                const badge = document.createElement('div');
-                badge.className = 'chord-badge';
-                badge.textContent = chord;
-                chordRow.appendChild(badge);
+            chordRow.appendChild(Object.assign(document.createElement('div'), { className: 'string-label', textContent: 'コード' }));
+            chords.forEach(c => {
+                chordRow.appendChild(Object.assign(document.createElement('div'), { className: 'chord-badge' + (chordDb[c] ? '' : ' unknown'), textContent: c }));
+                const d = document.createElement('div'); d.className = 'diagram'; d.innerHTML = chordDiagramSvg(chordDb[c]);
+                diagramRow.appendChild(d);
             });
             tabGrid.appendChild(chordRow);
 
-            for (let stringIdx = 0; stringIdx < 6; stringIdx++) {
-                const row = document.createElement('div');
-                row.className = 'tab-row';
-
-                const label = document.createElement('div');
-                label.className = 'string-label';
-                label.textContent = stringLabels[stringIdx];
-                row.appendChild(label);
-
-                const lineContainer = document.createElement('div');
-                lineContainer.className = 'string-line-container';
-                lineContainer.appendChild(Object.assign(document.createElement('div'), { className: 'string-line' }));
-
-                chords.forEach(chord => {
-                    const fretSlot = document.createElement('div');
-                    fretSlot.className = 'fret-slot';
-                    const frets = chordDb[chord];
-                    const fretVal = frets ? frets[stringIdx] : '?';
-
-                    const fretNum = document.createElement('div');
-                    fretNum.className = 'fret-number';
-                    if (fretVal === 'x' || fretVal === 'X') {
-                        fretNum.classList.add('mute'); fretNum.textContent = '×';
-                    } else if (fretVal === '0') {
-                        fretNum.classList.add('open'); fretNum.textContent = '0';
-                    } else {
-                        fretNum.textContent = fretVal;
-                    }
-                    fretSlot.appendChild(fretNum);
-                    lineContainer.appendChild(fretSlot);
+            for (let s = 0; s < 6; s++) {
+                const row = document.createElement('div'); row.className = 'tab-row';
+                row.appendChild(Object.assign(document.createElement('div'), { className: 'string-label', textContent: stringLabels[s] }));
+                const line = document.createElement('div'); line.className = 'string-line-container';
+                line.appendChild(Object.assign(document.createElement('div'), { className: 'string-line' }));
+                chords.forEach(c => {
+                    const frets = chordDb[c]; const v = frets ? frets[s] : '?';
+                    const slot = document.createElement('div'); slot.className = 'fret-slot';
+                    slot.appendChild(Object.assign(document.createElement('div'), {
+                        className: 'fret' + (v === 'x' ? ' mute' : v === '0' ? ' open' : ''),
+                        textContent: v === 'x' ? '×' : v
+                    }));
+                    line.appendChild(slot);
                 });
-
-                row.appendChild(lineContainer);
-                tabGrid.appendChild(row);
+                row.appendChild(line); tabGrid.appendChild(row);
             }
         }
 
         function setChords(str) { chordInput.value = str; renderTab(); }
+        chordInput.addEventListener('input', renderTab);
+
+        let guitarPlaying = false, guitarTimers = [];
+        function playChords() {
+            if (guitarPlaying) { stopChords(); return; }
+            const chords = chordInput.value.split(/[, ]+/).map(c => formatChord(c)).filter(c => chordDb[c]);
+            if (!chords.length) { showToast('再生できるコードがありません', 'error'); return; }
+            const ctx = getAudioContext(), spb = 60 / bpm, start = ctx.currentTime + 0.1;
+            let bar = 0; guitarPlaying = true;
+            chords.forEach((c, idx) => {
+                const frets = chordDb[c];
+                const barStart = start + bar * 4 * spb;
+                [1, 0.6, 0.8, 0.6].forEach((vel, beat) => {
+                    const t0 = barStart + beat * spb;
+                    for (let s = 5, k = 0; s >= 0; s--) {
+                        if (frets[s] === 'x') continue;
+                        playPianoNote([64, 59, 55, 50, 45, 40][s] + Number(frets[s]), t0 + k * 0.02, 0.5);
+                        k++;
+                    }
+                });
+                guitarTimers.push(setTimeout(() => {
+                    document.querySelectorAll('.chord-badge').forEach((b, i) => b.classList.toggle('active', i === idx));
+                }, (barStart - ctx.currentTime) * 1000));
+                bar++;
+            });
+            guitarTimers.push(setTimeout(stopChords, (start + bar * 4 * spb - ctx.currentTime) * 1000 + 300));
+            const b = document.getElementById('play-chords'); b.textContent = '■ 停止'; b.classList.replace('success', 'danger');
+        }
+
+        function stopChords() {
+            guitarTimers.forEach(clearTimeout); guitarTimers = [];
+            guitarPlaying = false;
+            document.querySelectorAll('.chord-badge').forEach(b => b.classList.remove('active'));
+            const b = document.getElementById('play-chords'); b.textContent = '▶ 再生'; b.classList.replace('danger', 'success');
+        }
+
+        document.getElementById('play-chords').addEventListener('click', playChords);
 
         function generateAsciiTab() {
-            const chords = chordInput.value.split(/[, ]+/).map(c => formatChordName(c)).filter(c => c !== "");
-            if (chords.length === 0) return "";
+            const chords = chordInput.value.split(/[, ]+/).map(c => formatChord(c)).filter(Boolean);
+            if (!chords.length) return "";
             let header = "       ", lines = ["1st|", "2nd|", "3rd|", "4th|", "5th|", "6th|"];
-            chords.forEach(chord => {
-                header += chord.padEnd(7, ' ');
-                const frets = chordDb[chord];
+            chords.forEach(c => {
+                header += c.padEnd(7, ' ');
+                const frets = chordDb[c];
                 for (let i = 0; i < 6; i++) lines[i] += `--${frets ? frets[i] : '?'}---`;
             });
             return header + "\n\n" + lines.map(l => l + "|").join("\n");
@@ -1313,40 +1330,20 @@
         function copyTextTab() {
             const ascii = generateAsciiTab();
             if (!ascii) return;
-            navigator.clipboard.writeText(ascii).then(() => showToast("テキストタブ譜をコピーしました！"));
+            navigator.clipboard.writeText(ascii).then(() => showToast("タブ譜をコピーしました！"));
         }
 
-        function downloadTextTab() {
-            const ascii = generateAsciiTab();
-            if (!ascii) return;
-            const blob = new Blob([ascii], { type: 'text/plain;charset=utf-8;' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'guitar_tab.txt';
-            a.click();
-            showToast("TXTファイルを保存しました！");
-        }
-
-        function downloadImageTab() {
-            const target = document.getElementById('tabViewport');
+        async function downloadImageTab() {
             showToast("画像を生成中...");
-            html2canvas(target, { backgroundColor: '#090d16', scale: 2 }).then(canvas => {
-                const a = document.createElement('a');
-                a.download = 'guitar_tab.png';
-                a.href = canvas.toDataURL('image/png');
-                a.click();
-                showToast("PNG画像を保存しました！");
-            });
+            try {
+                const canvasEl = await html2canvas(document.getElementById('tabViewport'), { backgroundColor: '#090d16', scale: 2 });
+                document.getElementById('tab-img-el').src = canvasEl.toDataURL('image/png');
+                document.getElementById('tab-img-out').hidden = false;
+                showToast("画像を保存しました！");
+            } catch {
+                showToast("画像の生成に失敗しました", 'error');
+            }
         }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2500);
-        }
-
-        chordInput.addEventListener('input', renderTab);
 
         // --- チャット機能 ---
         const chatBox = document.getElementById('chat-box');
@@ -1386,20 +1383,19 @@
                 removeMessage(loadingId);
                 appendMessage('通信エラーが発生しました。', 'assistant');
             } finally {
-                mediaFile.value = andResetFile();
+                mediaFile.value = '';
+                fileNameDisplay.textContent = "選択されていません";
             }
         });
-
-        function andResetFile() {
-            mediaFile.value = '';
-            fileNameDisplay.textContent = "選択されていません";
-            return '';
-        }
 
         function appendMessage(text, sender) {
             const messageDiv = document.createElement('div');
             messageDiv.className = "message " + sender;
-            messageDiv.textContent = text;
+            if (sender === 'assistant') {
+                messageDiv.innerHTML = text;
+            } else {
+                messageDiv.textContent = text;
+            }
             const id = 'msg-' + Date.now() + Math.random();
             messageDiv.id = id;
             chatBox.appendChild(messageDiv);
