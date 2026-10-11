@@ -923,22 +923,45 @@
 
         function updateTuner() {
             if (!tunerIsListening) return;
+
             const buf = new Float32Array(2048);
             tunerAnalyser.getFloatTimeDomainData(buf);
+
+            // 音量（RMS）を計算して無音・環境ノイズを完全にカットする
+            let rms = 0;
+            for (let i = 0; i < buf.length; i++) {
+                rms += buf[i] * buf[i];
+            }
+            rms = Math.sqrt(rms / buf.length);
+
+            if (rms < 0.02) {
+                tunerNoteEl.textContent = "--";
+                tunerFreqEl.textContent = "-- Hz";
+                tunerCentsEl.textContent = "-- cent";
+                tunerPointerEl.style.left = "50%";
+                tunerPointerEl.style.background = "#10b981";
+                tunerAnimationId = requestAnimationFrame(updateTuner);
+                return;
+            }
+
             const pitch = autoCorrelate(buf, audioCtx.sampleRate);
+
             if (pitch !== -1) {
                 const noteNum = 12 * (Math.log(pitch / 440) / Math.log(2)) + 69;
                 const noteIndex = Math.round(noteNum);
                 const noteName = noteStrings[noteIndex % 12];
                 const expectedFreq = 440 * Math.pow(2, (noteIndex - 69) / 12);
                 const cents = Math.floor((1200 * Math.log(pitch / expectedFreq)) / Math.log(2));
+
                 tunerNoteEl.textContent = noteName;
                 tunerFreqEl.textContent = pitch.toFixed(1) + " Hz";
                 tunerCentsEl.textContent = (cents >= 0 ? "+" : "") + cents + " cent";
+
                 let pointerPos = 50 + (cents / 50) * 45;
                 tunerPointerEl.style.left = Math.max(5, Math.min(95, pointerPos)) + "%";
                 tunerPointerEl.style.background = Math.abs(cents) < 5 ? "#10b981" : "#f43f5e";
             }
+
             tunerAnimationId = requestAnimationFrame(updateTuner);
         }
 
