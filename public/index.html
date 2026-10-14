@@ -17,19 +17,10 @@
             --text-sub: #64748b;
             --border-color: #e2e8f0;
             --tab-bg: #090d16;
-            --tab-string: #475569;
-            --tab-note: #38bdf8;
-            --tab-chord: #f43f5e;
-            --tab-fret-bg: #1e293b;
-            --font-music: "Noto Music", "Segoe UI Symbol", "Apple Symbols", serif;
             --font-mono: "Fira Code", ui-monospace, Consolas, monospace;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -50,16 +41,8 @@
             align-items: center;
         }
 
-        header h1 {
-            font-size: 1.25rem;
-            color: var(--primary-color);
-            font-weight: 700;
-        }
-
-        header p {
-            font-size: 0.875rem;
-            color: var(--text-sub);
-        }
+        header h1 { font-size: 1.25rem; color: var(--primary-color); font-weight: 700; }
+        header p { font-size: 0.875rem; color: var(--text-sub); }
 
         .main-container {
             display: flex;
@@ -124,10 +107,7 @@
             gap: 0.5rem;
         }
 
-        .input-row {
-            display: flex;
-            gap: 0.75rem;
-        }
+        .input-row { display: flex; gap: 0.75rem; }
 
         #user-input {
             flex: 1;
@@ -163,10 +143,7 @@
             font-size: 0.85rem;
         }
 
-        button:hover {
-            background-color: var(--primary-hover);
-        }
-
+        button:hover { background-color: var(--primary-hover); }
         button.secondary { background-color: #64748b; }
         button.secondary:hover { background-color: #475569; }
         button.success { background-color: #10b981; }
@@ -207,20 +184,8 @@
             gap: 1rem;
         }
 
-        .metronome-display {
-            text-align: center;
-            font-size: 1.75rem;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        .metronome-controls {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-        }
-
+        .metronome-display { text-align: center; font-size: 1.75rem; font-weight: bold; color: var(--primary-color); }
+        .metronome-controls { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
         input[type="range"] { flex: 1; }
 
         /* チューナー スタイル */
@@ -236,14 +201,7 @@
             gap: 0.5rem;
         }
 
-        .tuner-note {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #38bdf8;
-            height: 3.2rem;
-            display: flex;
-            align-items: center;
-        }
+        .tuner-note { font-size: 2.5rem; font-weight: bold; color: #38bdf8; height: 3.2rem; display: flex; align-items: center; }
 
         .tuner-meter-container {
             width: 100%;
@@ -254,307 +212,87 @@
             overflow: hidden;
         }
 
-        .tuner-meter-center {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: #f43f5e;
-            transform: translateX(-50%);
-            z-index: 2;
-        }
-
+        .tuner-meter-center { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; background: #f43f5e; transform: translateX(-50%); z-index: 2; }
         .tuner-meter-pointer {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 8px;
-            background: #10b981;
-            left: 50%;
-            transform: translateX(-50%);
-            transition: left 0.1s ease-out;
-            border-radius: 4px;
+            position: absolute; top: 0; bottom: 0; width: 8px; background: #10b981; left: 50%;
+            transform: translateX(-50%); transition: left 0.1s ease-out; border-radius: 4px;
         }
 
-        .tuner-info {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            font-size: 0.8rem;
-            color: #94a3b8;
-            font-family: 'Fira Code', monospace;
-        }
+        .tuner-info { display: flex; justify-content: space-between; width: 100%; font-size: 0.8rem; color: #94a3b8; font-family: 'Fira Code', monospace; }
 
-        .instrument-launchers {
-            display: flex;
-            gap: 0.75rem;
-        }
-
+        .instrument-launchers { display: flex; gap: 0.75rem; }
         .launch-btn {
-            flex: 1;
-            padding: 1rem;
-            font-size: 1rem;
-            font-weight: bold;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.3rem;
-            background: #f1f5f9;
-            color: var(--text-main);
-            border: 2px solid var(--border-color);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
+            flex: 1; padding: 1rem; font-size: 1rem; font-weight: bold; display: flex; flex-direction: column;
+            align-items: center; gap: 0.3rem; background: #f1f5f9; color: var(--text-main);
+            border: 2px solid var(--border-color); border-radius: 10px; cursor: pointer; transition: all 0.2s;
         }
-        .launch-btn:hover {
-            border-color: var(--primary-color);
-            background: #e0e7ff;
-            color: var(--primary-color);
-        }
+        .launch-btn:hover { border-color: var(--primary-color); background: #e0e7ff; color: var(--primary-color); }
 
         /* モーダル画面 */
         #instrument-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; padding: 2rem;
         }
 
         .modal-content {
-            background: white;
-            width: 100%;
-            max-width: 1000px;
-            height: 90vh;
-            border-radius: 16px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            background: white; width: 100%; max-width: 1000px; height: 90vh;
+            border-radius: 16px; display: flex; flex-direction: column; overflow: hidden;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
 
-        .modal-header {
-            padding: 1.25rem 2rem;
-            background: #f8fafc;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .modal-header { padding: 1.25rem 2rem; background: #f8fafc; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 1.25rem; color: var(--primary-color); }
+        .modal-body { padding: 1.5rem 2rem; flex: 1; display: flex; flex-direction: column; gap: 1.5rem; overflow-y: auto; }
 
-        .modal-header h2 {
-            font-size: 1.25rem;
-            color: var(--primary-color);
-        }
+        #score-box { background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; max-height: 380px; overflow: auto; }
+        #staffCanvas { display: block; background-color: #fff; }
 
-        .modal-body {
-            padding: 1.5rem 2rem;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            overflow-y: auto;
-        }
+        .toolbar { display: flex; gap: 0.75rem 1.25rem; flex-wrap: wrap; align-items: center; background: #f1f5f9; padding: 0.75rem; border-radius: 8px; width: 100%; }
+        .tgroup { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
+        .tlabel { font-size: 0.85rem; font-weight: 700; color: var(--text-sub); margin-right: 0.2rem; }
+        select { font: inherit; font-size: 0.9rem; padding: 0.3rem 0.6rem; border-radius: 6px; border: 1px solid var(--border-color); background: white; }
 
-        /* ピアノ用五線譜スタイル */
-        #score-box {
-            background: #ffffff;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            width: 100%;
-            max-height: 380px;
-            overflow: auto;
-        }
+        .keyboard { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; width: 100%; }
+        .octave { display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem; font-weight: 600; color: var(--text-sub); }
 
-        #staffCanvas {
-            display: block;
-            background-color: #fff;
-        }
-
-        /* ツールバー */
-        .toolbar {
-            display: flex;
-            gap: 0.75rem 1.25rem;
-            flex-wrap: wrap;
-            align-items: center;
-            background: #f1f5f9;
-            padding: 0.75rem;
-            border-radius: 8px;
-            width: 100%;
-        }
-
-        .tgroup {
-            display: flex;
-            gap: 0.35rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .tlabel {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--text-sub);
-            margin-right: 0.2rem;
-        }
-
-        select {
-            font: inherit;
-            font-size: 0.9rem;
-            padding: 0.3rem 0.6rem;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background: white;
-        }
-
-        .keyboard {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.6rem;
-            width: 100%;
-        }
-
-        .octave {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-sub);
-        }
-
-        .piano-keys-container {
-            width: 100%;
-            max-width: 560px;
-            height: 160px;
-            background: #2a2d3a;
-            padding: 10px 10px 0;
-            border-radius: 10px;
-            display: flex;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        .keys {
-            position: relative;
-            flex: 1;
-            display: flex;
-        }
-
-        .key {
-            padding: 0;
-            border-radius: 0 0 6px 6px;
-            user-select: none;
-            cursor: pointer;
-            font-weight: 700;
-        }
-
+        .piano-keys-container { width: 100%; max-width: 560px; height: 160px; background: #2a2d3a; padding: 10px 10px 0; border-radius: 10px; display: flex; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .keys { position: relative; flex: 1; display: flex; }
+        .key { padding: 0; border-radius: 0 0 6px 6px; user-select: none; cursor: pointer; font-weight: 700; }
         .white-key {
-            flex: 1;
-            height: 100%;
-            background: #ffffff;
-            color: #1b1f33;
-            border: 1px solid #9aa1b5;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            padding-bottom: 8px;
-            font-size: 0.85rem;
+            flex: 1; height: 100%; background: #ffffff; color: #1b1f33; border: 1px solid #9aa1b5;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 8px; font-size: 0.85rem;
         }
         .white-key:hover { background: #eef0f7; }
         .white-key.pressed, .white-key:active { background: #c7cbf5; }
-
         .black-key {
-            position: absolute;
-            top: 0;
-            width: 8%;
-            height: 60%;
-            background: #14161f;
-            color: #c9cde0;
-            border: 1px solid #000;
-            transform: translateX(-50%);
-            z-index: 2;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            padding-bottom: 6px;
-            font-size: 0.7rem;
+            position: absolute; top: 0; width: 8%; height: 60%; background: #14161f; color: #c9cde0; border: 1px solid #000;
+            transform: translateX(-50%); z-index: 2; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 6px; font-size: 0.7rem;
         }
         .black-key:hover { background: #2c3040; }
         .black-key.pressed, .black-key:active { background: var(--primary-color); }
-
         .kbd { font-family: var(--font-mono); font-size: 0.65rem; opacity: 0.6; font-weight: 400; }
         .kname { font-size: 0.68rem; color: #4a5168; font-family: var(--font-mono); font-weight: 400; }
 
-        /* ギターTAB譜エディタスタイル */
-        .guitar-generator-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            width: 100%;
-        }
-
-        .generator-card {
-            background: #0f172a;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 20px;
-            color: #f8fafc;
-        }
-
+        /* ギターTAB譜エディタ */
+        .guitar-generator-wrapper { display: flex; flex-direction: column; gap: 1.5rem; width: 100%; }
+        .generator-card { background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; color: #f8fafc; }
         .input-group { display: flex; flex-direction: column; gap: 8px; }
         .input-group label { font-size: 0.9rem; font-weight: 500; color: #e2e8f0; display: flex; justify-content: space-between; flex-wrap: wrap; }
-
         .guitar-chord-input {
-            width: 100%;
-            padding: 12px 16px;
-            font-size: 1.05rem;
-            font-family: 'Fira Code', monospace;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1.5px solid rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
-            color: #ffffff;
-            outline: none;
+            width: 100%; padding: 12px 16px; font-size: 1.05rem; font-family: 'Fira Code', monospace;
+            background: rgba(15, 23, 42, 0.8); border: 1.5px solid rgba(255, 255, 255, 0.15); border-radius: 8px; color: #ffffff; outline: none;
         }
         .guitar-chord-input:focus { border-color: var(--primary-color); }
-
         .quick-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
-        .chip-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #cbd5e1;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
+        .chip-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; }
         .chip-btn:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
 
         .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
         .output-title { font-size: 1rem; font-weight: 600; color: #e2e8f0; }
-
         .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
-        .action-btn {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 7px 12px; font-size: 0.82rem; font-weight: 500;
-            border-radius: 6px; border: none; cursor: pointer;
-        }
+        .action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; font-size: 0.82rem; font-weight: 500; border-radius: 6px; border: none; cursor: pointer; }
 
-        .tab-viewport {
-            background: var(--tab-bg);
-            border-radius: 10px;
-            padding: 20px 15px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            overflow-x: auto;
-        }
+        .tab-viewport { background: var(--tab-bg); border-radius: 10px; padding: 20px 15px; border: 1px solid rgba(255, 255, 255, 0.05); overflow-x: auto; }
         .diagram-row { display: flex; margin-left: 70px; margin-bottom: 8px; min-width: max-content; }
         .diagram { width: 72px; display: flex; justify-content: center; color: #c9cde0; }
         .diagram.active { color: #fcd34d; }
@@ -562,7 +300,6 @@
         .tab-grid { display: flex; flex-direction: column; min-width: max-content; font-family: 'Fira Code', monospace; }
         .tab-row { display: flex; align-items: center; height: 32px; position: relative; }
         .chord-row { height: 34px; margin-bottom: 4px; }
-
         .string-label { width: 70px; font-size: 0.8rem; font-weight: 600; color: #a3abc7; text-align: right; padding-right: 12px; }
         .chord-badge { width: 72px; text-align: center; font-weight: 700; font-size: 1rem; color: #fb7185; border-radius: 6px; }
         .chord-badge.unknown { color: #fcd34d; text-decoration: underline wavy; }
@@ -576,10 +313,8 @@
 
         .fret-slot { width: 72px; display: flex; justify-content: center; align-items: center; z-index: 2; }
         .fret {
-            min-width: 26px; height: 26px; padding: 0 3px; border-radius: 5px;
-            background: #1c2140; border: 1px solid #3d4466;
-            color: #7dd3fc; font-weight: 600; font-size: 0.9rem;
-            display: flex; align-items: center; justify-content: center;
+            min-width: 26px; height: 26px; padding: 0 3px; border-radius: 5px; background: #1c2140; border: 1px solid #3d4466;
+            color: #7dd3fc; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;
         }
         .fret.mute { color: #fca5a5; background: #2a1016; border-color: #7f1d1d; }
         .fret.open { color: #6ee7b7; background: #0b2a22; border-color: #065f46; }
@@ -592,14 +327,7 @@
         .toast.show { opacity: 1; transform: translateY(0); }
         .toast.error { background: #b91c1c; }
 
-        .modal-footer {
-            padding: 1rem 2rem;
-            background: #f8fafc;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-        }
+        .modal-footer { padding: 1rem 2rem; background: #f8fafc; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; align-items: center; }
     </style>
 </head>
 <body>
@@ -661,6 +389,17 @@
                         </div>
                     </div>
                     <button type="button" id="tuner-btn">マイクを起動</button>
+                </div>
+            </div>
+
+            <!-- AI自動採譜機能カード -->
+            <div class="card">
+                <div class="card-header">🎼 AI自動採譜（Python連携）</div>
+                <div class="card-body">
+                    <p style="font-size: 0.85rem; color: var(--text-sub);">音源ファイル（mp3等）をアップロードすると、サーバー上のPythonでパート別に分離してMusicXMLを生成します。</p>
+                    <input type="file" id="audio-file-input" accept="audio/*" style="font-size: 0.85rem;">
+                    <button type="button" class="success" id="start-transcribe-btn">採譜を実行する</button>
+                    <div id="transcribe-status" style="font-size: 0.82rem; color: var(--primary-color); word-break: break-all;"></div>
                 </div>
             </div>
 
@@ -814,9 +553,7 @@
 
         // --- メトロノーム機能 ---
         let isPlaying = false;
-        let timerId = null;
         let bpm = 120;
-
         const tempoSlider = document.getElementById('tempo-slider');
         const tempoDisplay = document.getElementById('tempo-display');
         const metronomeBtn = document.getElementById('metronome-btn');
@@ -832,7 +569,7 @@
             else { startMetronome(); metronomeBtn.textContent = "ストップ"; metronomeBtn.classList.add('ng'); }
         });
 
-        let nextTime = 0, beat = 0, metroTimer = null;
+        let beat = 0, metroTimer = null;
         function playClick() {
             const ctx = getAudioContext();
             const osc = ctx.createOscillator();
@@ -923,15 +660,10 @@
 
         function updateTuner() {
             if (!tunerIsListening) return;
-
             const buf = new Float32Array(2048);
             tunerAnalyser.getFloatTimeDomainData(buf);
-
-            // 音量（RMS）を計算して無音・環境ノイズを完全にカットする
             let rms = 0;
-            for (let i = 0; i < buf.length; i++) {
-                rms += buf[i] * buf[i];
-            }
+            for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
             rms = Math.sqrt(rms / buf.length);
 
             if (rms < 0.02) {
@@ -945,7 +677,6 @@
             }
 
             const pitch = autoCorrelate(buf, audioCtx.sampleRate);
-
             if (pitch !== -1) {
                 const noteNum = 12 * (Math.log(pitch / 440) / Math.log(2)) + 69;
                 const noteIndex = Math.round(noteNum);
@@ -956,14 +687,45 @@
                 tunerNoteEl.textContent = noteName;
                 tunerFreqEl.textContent = pitch.toFixed(1) + " Hz";
                 tunerCentsEl.textContent = (cents >= 0 ? "+" : "") + cents + " cent";
-
                 let pointerPos = 50 + (cents / 50) * 45;
                 tunerPointerEl.style.left = Math.max(5, Math.min(95, pointerPos)) + "%";
                 tunerPointerEl.style.background = Math.abs(cents) < 5 ? "#10b981" : "#f43f5e";
             }
-
             tunerAnimationId = requestAnimationFrame(updateTuner);
         }
+
+        // --- Python自動採譜のフロントエンド処理 ---
+        document.getElementById('start-transcribe-btn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('audio-file-input');
+            const statusEl = document.getElementById('transcribe-status');
+            
+            if (fileInput.files.length === 0) {
+                showToast('音声ファイルを選択してください', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('audioFile', fileInput.files[0]);
+
+            statusEl.textContent = '分離・採譜処理中...（数分かかる場合があります）';
+            showToast('Python処理を開始しました');
+
+            try {
+                const response = await fetch('/api/transcribe', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.success) {
+                    statusEl.textContent = '完了しました！separated_outputフォルダを確認してください。';
+                    showToast('楽譜データの生成が完了しました！');
+                } else {
+                    statusEl.textContent = 'エラーが発生しました。';
+                    showToast('処理に失敗しました', 'error');
+                }
+            } catch (err) {
+                statusEl.textContent = '通信エラーが発生しました。';
+                showToast('通信エラー', 'error');
+            }
+        });
 
         // --- モーダル制御 ---
         function openInstrumentModal(inst) {
@@ -985,20 +747,10 @@
         document.getElementById('btn-close-modal-footer').addEventListener('click', closeInstrumentModal);
 
         // --- ピアノ楽譜エディタ機能 ---
-        let pianoNotes = [];
-        let pianoRedo = [];
-        let currentDuration = 1;
-        let currentAcc = '#';
-        let pianoTimeSig = 4;
-        let pianoOctave = 4;
-        let isPianoPlaying = false;
-        let pianoTimers = [];
-        let playIndex = -1;
-
+        let pianoNotes = [], pianoRedo = [], currentDuration = 1, currentAcc = '#', pianoTimeSig = 4, pianoOctave = 4, isPianoPlaying = false, pianoTimers = [], playIndex = -1;
         const WHITE_LETTER = { 0: 0, 2: 1, 4: 2, 5: 3, 7: 4, 9: 5, 11: 6 };
         const SOLFEGE = ['ド', 'レ', 'ミ', 'ファ', 'ソ', 'ラ', 'シ'];
         const LETTERS = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-        const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
         const canvas = document.getElementById('staffCanvas');
         const ctx2d = canvas.getContext('2d');
 
@@ -1021,71 +773,48 @@
             out.gain.exponentialRampToValueAtTime(0.0001, when + dur + 0.3);
             filter.connect(out).connect(masterOut);
             const osc = ctx.createOscillator();
-            osc.type = 'triangle';
-            osc.frequency.value = f;
-            osc.connect(filter);
-            osc.start(when);
-            osc.stop(when + dur + 0.35);
+            osc.type = 'triangle'; osc.frequency.value = f;
+            osc.connect(filter); osc.start(when); osc.stop(when + dur + 0.35);
         }
 
-        function addPianoItem(item) {
-            pianoNotes.push(item);
-            pianoRedo = [];
-            redrawStaff();
-        }
-
-        function playAndAddNote(midi) {
-            playPianoNote(midi, getAudioContext().currentTime, 0.6);
-            addPianoItem({ t: 'n', midi, d: currentDuration, acc: currentAcc });
-        }
+        function addPianoItem(item) { pianoNotes.push(item); pianoRedo = []; redrawStaff(); }
+        function playAndAddNote(midi) { playPianoNote(midi, getAudioContext().currentTime, 0.6); addPianoItem({ t: 'n', midi, d: currentDuration, acc: currentAcc }); }
 
         function buildKeyboard() {
-            const keys = document.getElementById('keys');
-            keys.innerHTML = '';
+            const keys = document.getElementById('keys'); keys.innerHTML = '';
             const base = (pianoOctave + 1) * 12;
             const whites = [0, 2, 4, 5, 7, 9, 11, 12];
             whites.forEach((semi, wi) => {
                 const midi = base + semi;
                 const name = LETTERS[wi % 7] + (Math.floor(midi / 12) - 1);
                 const b = document.createElement('button');
-                b.type = 'button';
-                b.className = 'key white-key';
-                b.dataset.midi = midi;
+                b.type = 'button'; b.className = 'key white-key'; b.dataset.midi = midi;
                 b.innerHTML = `<span>${SOLFEGE[wi % 7]}</span><span class="kname">${name}</span>`;
                 keys.appendChild(b);
             });
             [[1, 0], [3, 1], [6, 3], [8, 4], [10, 5]].forEach(([semi, wi]) => {
                 const midi = base + semi;
                 const b = document.createElement('button');
-                b.type = 'button';
-                b.className = 'key black-key';
-                b.dataset.midi = midi;
+                b.type = 'button'; b.className = 'key black-key'; b.dataset.midi = midi;
                 b.style.left = ((wi + 1) / whites.length * 100) + '%';
                 keys.appendChild(b);
             });
             document.getElementById('oct-label').textContent = `C${pianoOctave}〜C${pianoOctave + 1}`;
         }
 
-        document.getElementById('keys').addEventListener('click', e => {
-            const k = e.target.closest('.key');
-            if (k) playAndAddNote(+k.dataset.midi);
-        });
-
+        document.getElementById('keys').addEventListener('click', e => { const k = e.target.closest('.key'); if (k) playAndAddNote(+k.dataset.midi); });
         document.querySelectorAll('[data-dur]').forEach(b => {
             b.addEventListener('click', () => {
                 currentDuration = +b.dataset.dur;
                 document.querySelectorAll('[data-dur]').forEach(x => { x.style.background = ''; x.setAttribute('aria-pressed', 'false'); });
-                b.style.background = 'var(--primary-color)';
-                b.setAttribute('aria-pressed', 'true');
+                b.style.background = 'var(--primary-color)'; b.setAttribute('aria-pressed', 'true');
             });
         });
-
         document.querySelectorAll('[data-acc]').forEach(b => {
             b.addEventListener('click', () => {
                 currentAcc = b.dataset.acc;
                 document.querySelectorAll('[data-acc]').forEach(x => { x.style.background = ''; x.setAttribute('aria-pressed', 'false'); });
-                b.style.background = 'var(--primary-color)';
-                b.setAttribute('aria-pressed', 'true');
+                b.style.background = 'var(--primary-color)'; b.setAttribute('aria-pressed', 'true');
             });
         });
 
@@ -1094,19 +823,9 @@
         document.getElementById('oct-up').addEventListener('click', () => { pianoOctave = Math.min(5, pianoOctave + 1); buildKeyboard(); });
         document.getElementById('piano-ts').addEventListener('change', e => { pianoTimeSig = +e.target.value; redrawStaff(); });
 
-        document.getElementById('undo').addEventListener('click', () => {
-            if (!pianoNotes.length) return;
-            pianoRedo.push(pianoNotes.pop());
-            redrawStaff();
-        });
-        document.getElementById('redo').addEventListener('click', () => {
-            if (!pianoRedo.length) return;
-            pianoNotes.push(pianoRedo.pop());
-            redrawStaff();
-        });
-        document.getElementById('clear').addEventListener('click', () => {
-            pianoNotes = []; pianoRedo = []; redrawStaff();
-        });
+        document.getElementById('undo').addEventListener('click', () => { if (!pianoNotes.length) return; pianoRedo.push(pianoNotes.pop()); redrawStaff(); });
+        document.getElementById('redo').addEventListener('click', () => { if (!pianoRedo.length) return; pianoNotes.push(pianoRedo.pop()); redrawStaff(); });
+        document.getElementById('clear').addEventListener('click', () => { pianoNotes = []; pianoRedo = []; redrawStaff(); });
 
         const GAP = 10, SYS_H = 210, LEFT = 80, PX_PER_BEAT = 40;
         const TREBLE_BOTTOM_STEP = 33, BASS_BOTTOM_STEP = 18;
@@ -1141,9 +860,7 @@
         }
 
         function drawStaffLines(y0, x1, x2) {
-            for (let i = 0; i < 5; i++) {
-                ctx2d.beginPath(); ctx2d.moveTo(x1, y0 + i * GAP); ctx2d.lineTo(x2, y0 + i * GAP); ctx2d.stroke();
-            }
+            for (let i = 0; i < 5; i++) { ctx2d.beginPath(); ctx2d.moveTo(x1, y0 + i * GAP); ctx2d.lineTo(x2, y0 + i * GAP); ctx2d.stroke(); }
         }
 
         function redrawStaff() {
@@ -1162,14 +879,6 @@
                 ctx2d.lineWidth = 1; drawStaffLines(g.trebleTop, 15, xEnd); drawStaffLines(g.bassTop, 15, xEnd);
                 ctx2d.lineWidth = 2; ctx2d.beginPath(); ctx2d.moveTo(15, g.trebleTop); ctx2d.lineTo(15, g.bassBottom); ctx2d.stroke();
                 ctx2d.font = '32px serif'; ctx2d.fillText('𝄞', 20, g.trebleTop + 3.3 * GAP); ctx2d.fillText('𝄢', 20, g.bassTop + GAP * 1.1);
-
-                ctx2d.lineWidth = 1;
-                lineMeasures.forEach(ms => {
-                    const x = ms.x + ms.width;
-                    if (ms.last) ctx2d.setLineDash([3, 3]);
-                    ctx2d.beginPath(); ctx2d.moveTo(x, g.trebleTop); ctx2d.lineTo(x, g.bassBottom); ctx2d.stroke();
-                    ctx2d.setLineDash([]);
-                });
             }
 
             pianoNotes.forEach((item, i) => {
@@ -1187,7 +896,6 @@
                     const bottomY = treble ? g.trebleBottom : g.bassBottom;
                     const rel = step - (treble ? TREBLE_BOTTOM_STEP : BASS_BOTTOM_STEP);
                     const y = bottomY - rel * GAP / 2;
-
                     ctx2d.beginPath(); ctx2d.ellipse(x, y, 5.5, 4, -Math.PI / 6, 0, Math.PI * 2);
                     if (item.d >= 2) ctx2d.stroke(); else ctx2d.fill();
                 }
@@ -1197,27 +905,22 @@
         function playScore() {
             if (isPianoPlaying) { stopScore(); return; }
             if (!pianoNotes.length) { showToast('再生する音符がありません', 'error'); return; }
-            const ctx = getAudioContext();
-            const spb = 60 / bpm;
-            const start = ctx.currentTime + 0.1;
+            const ctx = getAudioContext(), spb = 60 / bpm, start = ctx.currentTime + 0.1;
             let t = 0; isPianoPlaying = true;
             pianoNotes.forEach((item, i) => {
-                const when = start + t;
-                const dur = item.d * spb;
+                const when = start + t, dur = item.d * spb;
                 if (item.t === 'n') playPianoNote(item.midi, when, dur * 0.9);
                 pianoTimers.push(setTimeout(() => { playIndex = i; redrawStaff(); }, (when - ctx.currentTime) * 1000));
                 t += dur;
             });
             pianoTimers.push(setTimeout(stopScore, (start + t - ctx.currentTime) * 1000 + 200));
-            const b = document.getElementById('play-score');
-            b.textContent = '■ 停止'; b.classList.replace('success', 'danger');
+            const b = document.getElementById('play-score'); b.textContent = '■ 停止'; b.classList.replace('success', 'danger');
         }
 
         function stopScore() {
             pianoTimers.forEach(clearTimeout); pianoTimers = [];
             isPianoPlaying = false; playIndex = -1; redrawStaff();
-            const b = document.getElementById('play-score');
-            b.textContent = '▶ 再生'; b.classList.replace('danger', 'success');
+            const b = document.getElementById('play-score'); b.textContent = '▶ 再生'; b.classList.replace('danger', 'success');
         }
 
         document.getElementById('play-score').addEventListener('click', playScore);
@@ -1310,8 +1013,7 @@
             const ctx = getAudioContext(), spb = 60 / bpm, start = ctx.currentTime + 0.1;
             let bar = 0; guitarPlaying = true;
             chords.forEach((c, idx) => {
-                const frets = chordDb[c];
-                const barStart = start + bar * 4 * spb;
+                const frets = chordDb[c], barStart = start + bar * 4 * spb;
                 [1, 0.6, 0.8, 0.6].forEach((vel, beat) => {
                     const t0 = barStart + beat * spb;
                     for (let s = 5, k = 0; s >= 0; s--) {
