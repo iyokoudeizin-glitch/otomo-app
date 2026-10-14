@@ -1,71 +1,90 @@
+require('dotenv').config();
 const express = require('express');
-const axios = require('axios');
-const FormData = require('form-data');
+const multer = require('multer');
 const fs = require('fs');
-const path = require('path');
+const { GoogleGenAI } = require('@google/genai');
+const { marked } = require('marked');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const upload = multer({ dest: 'uploads/' });
+const ai = new GoogleGenAI();
 
-// JSONやURLエンコードされたデータのパース設定
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
 
-// Google Colab（Ngrok）上で実行されているFastAPIサーバーのURL
-const COLAB_API_URL = "https://dumpling-fancy-gestation.ngrok-free.dev/transcribe";
+const chatSessions = {};
 
-/**
- * 音声ファイル受信用エンドポイント
- */
-app.post('/api/upload-audio', async (req, res) => {
+async function retryOperation(fn, retries = 3, delay = 2000) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (error) {
+            if (error.status === 503 && i < retries - 1) {
+                console.log(`APIが混雑しています（503）。${delay / 1000}秒後に再試行します... (${i + 1}/${retries})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2;
+            } else {
+                throw error;
+            }
+        }
+    }
+}
+
+app.post('/api/chat', upload.single('media'), async (req, res) => {
     try {
-        const filePath = path.join(__dirname, 'uploads', 'input.mp3');
+        const { message, sessionId = 'default' } = req.body;
+        const file = req.file;
 
-        if (!fs.existsSync(filePath)) {
-            return res.status(400).json({ 
-                success: false, 
-                message: '処理対象の音声ファイル（uploads/input.mp3）が見つかりません。' 
+        if (!chatSessions[sessionId]) {
+            chatSessions[sessionId] = ai.chats.create({
+                model: 'gemini-3.6-flash',
+                config: {
+                    systemInstruction: `あなたは音楽学習プラットフォーム「otomo」の優秀なAIアシスタントです。音楽理論、楽譜の読み方、楽器の練習方法などを分かりやすく教えてください。
+                    
+【出力のルール】
+- 前置きの挨拶や不要な相槌（「〜ですね」「お答えします」など）は省き、結論から簡潔に答えてください。
+- 長文の段落は避け、要点は箇条書きを使って分かりやすくまとめてください。
+- またHTMLタグなどの余計な記述は表示させないようにしてください。`
+                }
             });
         }
 
-        console.log("--- Google Colabへ音声ファイルを転送し、自動採譜を開始します ---");
+        const chat = chatSessions[sessionId];
+        let response;
 
-        const form = new FormData();
-        form.append('audioFile', fs.createReadStream(filePath));
+        await retryOperation(async () => {
+            if (file) {
+                const fileBuffer = fs.readFileSync(file.path);
+                const base64Data = fileBuffer.toString('base64');
 
-        const response = await axios.post(COLAB_API_URL, form, {
-            headers: {
-                ...form.getHeaders(),
-                'ngrok-skip-browser-warning': 'true'
-            },
-            maxContentLength: Infinity,
-            maxBodyLength: Infinity,
+                response = await chat.sendMessage({
+                    message: [
+                        message || "このファイルについて解説してください。",
+                        {
+                            inlineData: {
+                                data: base64Data,
+                                mimeType: file.mimetype
+                            }
+                        }
+                    ]
+                });
+                fs.unlinkSync(file.path);
+            } else {
+                response = await chat.sendMessage({ message });
+            }
         });
 
-        console.log("Colabからのレスポンス:", response.data);
+        const rawText = response.text || "";
+        const htmlReply = marked.parse(rawText);
 
-        return res.status(200).json({
-            success: true,
-            message: 'Colabでの自動採譜処理が正常に完了しました！',
-            colabResponse: response.data
-        });
-
+        res.json({ reply: htmlReply });
     } catch (error) {
-        console.error("Colab通信エラー:", error.message);
-        if (error.response) {
-            console.error("ステータスコード:", error.response.status);
-            console.error("レスポンスデータ:", error.response.data);
-        }
-        return res.status(500).json({
-            success: false,
-            message: '自動採譜サーバー（Colab）との通信に失敗しました。',
-            error: error.message
-        });
+        console.error("API Error:", error);
+        res.status(500).json({ error: "AIの応答取得に失敗しました。しばらく待ってから再度お試しください。" });
     }
 });
 
-// サーバーの起動
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Otomo server is running on port ${PORT}`);
-    console.log(`連携先 Colab API URL: ${COLAB_API_URL}`);
+    console.log(`otomo サーバー起動完了: http://localhost:3000`);
 });
