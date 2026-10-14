@@ -15,30 +15,24 @@ app.use(express.urlencoded({ extended: true }));
 const COLAB_API_URL = "https://dumpling-fancy-gestation.ngrok-free.dev/transcribe";
 
 /**
- * 簡易的なファイル受信用エンドポイント（例: /api/upload-audio）
- * クライアント側から送信された音声ファイルを受け取り、Colabへ転送します
+ * 音声ファイル受信用エンドポイント
  */
 app.post('/api/upload-audio', async (req, res) => {
     try {
-        // ※ multerなどのミドルウェアを使用している場合、req.file にアップロードされたファイルが格納されます
-        // 例として、サーバー上のローカルファイル "uploads/input.mp3" を読み込んで転送する場合の処理を記述します。
         const filePath = path.join(__dirname, 'uploads', 'input.mp3');
 
         if (!fs.existsSync(filePath)) {
             return res.status(400).json({ 
                 success: false, 
-                message: '処理対象の音声ファイルが見つかりません。' 
+                message: '処理対象の音声ファイル（uploads/input.mp3）が見つかりません。' 
             });
         }
 
         console.log("--- Google Colabへ音声ファイルを転送し、自動採譜を開始します ---");
 
-        // FormDataを使ってファイルを包む
         const form = new FormData();
         form.append('audioFile', fs.createReadStream(filePath));
 
-        // ColabのFastAPIサーバーへリクエストを送信
-        // ngrokの仕様上、ブラウザ判定を回避する為のヘッダー 'ngrok-skip-browser-warning': 'true' を付与します
         const response = await axios.post(COLAB_API_URL, form, {
             headers: {
                 ...form.getHeaders(),
