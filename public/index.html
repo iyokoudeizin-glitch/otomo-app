@@ -392,14 +392,18 @@
                 </div>
             </div>
 
-            <!-- AI自動採譜機能カード -->
+            <!-- 音感トレ・コード聞き分けミニゲーム機能カード -->
             <div class="card">
-                <div class="card-header">🎼 AI自動採譜（Python連携）</div>
+                <div class="card-header">🎧 音感トレ・コード聞き分け</div>
                 <div class="card-body">
-                    <p style="font-size: 0.85rem; color: var(--text-sub);">音源ファイル（mp3等）をアップロードすると、サーバー上のPythonでパート別に分離してMusicXMLを生成します。</p>
-                    <input type="file" id="audio-file-input" accept="audio/*" style="font-size: 0.85rem;">
-                    <button type="button" class="success" id="start-transcribe-btn">採譜を実行する</button>
-                    <div id="transcribe-status" style="font-size: 0.82rem; color: var(--primary-color); word-break: break-all;"></div>
+                    <p style="font-size: 0.85rem; color: var(--text-sub);">鳴ったコードが「明るい（メジャー）」か「暗い（マイナー）」か当てよう！</p>
+                    <div style="text-align: center; font-weight: 500; font-size: 0.9rem;" id="game-status">音を鳴らしてスタート！</div>
+                    <button type="button" class="success" id="play-game-chord">▶ コードを鳴らす</button>
+                    <div style="display: flex; gap: 0.5rem;" id="game-buttons">
+                        <button type="button" class="secondary" style="flex:1;" onclick="checkGameAnswer('major')">✨ メジャー</button>
+                        <button type="button" class="secondary" style="flex:1;" onclick="checkGameAnswer('minor')">🌙 マイナー</button>
+                    </div>
+                    <div id="game-result" style="font-size: 0.85rem; font-weight: bold; text-align: center; min-height: 1.2rem;"></div>
                 </div>
             </div>
 
@@ -694,38 +698,46 @@
             tunerAnimationId = requestAnimationFrame(updateTuner);
         }
 
-        // --- Python自動採譜のフロントエンド処理 ---
-        document.getElementById('start-transcribe-btn').addEventListener('click', async () => {
-            const fileInput = document.getElementById('audio-file-input');
-            const statusEl = document.getElementById('transcribe-status');
+        // --- 音感トレ・コード聞き分けミニゲーム機能 ---
+        let currentGameChordType = '';
+        document.getElementById('play-game-chord').addEventListener('click', () => {
+            const ctx = getAudioContext();
+            currentGameChordType = Math.random() > 0.5 ? 'major' : 'minor';
+            // Cメジャー (ド・ミ・ソ) vs Cマイナー (ド・変ミ・ソ)
+            const freqs = currentGameChordType === 'major' ? [261.63, 329.63, 392.00] : [261.63, 311.13, 392.00];
             
-            if (fileInput.files.length === 0) {
-                showToast('音声ファイルを選択してください', 'error');
+            freqs.forEach((f, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.value = f;
+                const now = ctx.currentTime + idx * 0.03;
+                gain.gain.setValueAtTime(0.0001, now);
+                gain.gain.exponentialRampToValueAtTime(0.25, now + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+                osc.connect(gain).connect(masterOut);
+                osc.start(now);
+                osc.stop(now + 1.3);
+            });
+
+            document.getElementById('game-status').textContent = "音が鳴りました！どちらの響きですか？";
+            document.getElementById('game-result').textContent = "";
+        });
+
+        function checkGameAnswer(type) {
+            if (!currentGameChordType) {
+                showToast('まずは「コードを鳴らす」を押してください！', 'error');
                 return;
             }
-
-            const formData = new FormData();
-            formData.append('audioFile', fileInput.files[0]);
-
-            statusEl.textContent = '分離・採譜処理中...（数分かかる場合があります）';
-            showToast('Python処理を開始しました');
-
-            try {
-                const response = await fetch('/api/transcribe', { method: 'POST', body: formData });
-                const data = await response.json();
-
-                if (data.success) {
-                    statusEl.textContent = '完了しました！separated_outputフォルダを確認してください。';
-                    showToast('楽譜データの生成が完了しました！');
-                } else {
-                    statusEl.textContent = 'エラーが発生しました。';
-                    showToast('処理に失敗しました', 'error');
-                }
-            } catch (err) {
-                statusEl.textContent = '通信エラーが発生しました。';
-                showToast('通信エラー', 'error');
+            const resEl = document.getElementById('game-result');
+            if (type === currentGameChordType) {
+                resEl.style.color = '#10b981';
+                resEl.textContent = "🎉 正解！素晴らしい耳ですね！";
+            } else {
+                resEl.style.color = '#ef4444';
+                resEl.textContent = "❌ 残念！もう一度聴き比べてみましょう。";
             }
-        });
+        }
 
         // --- モーダル制御 ---
         function openInstrumentModal(inst) {
