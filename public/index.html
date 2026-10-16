@@ -434,7 +434,7 @@
             <div class="card">
                 <div class="card-header">🎹 ピアノ演奏自動採点</div>
                 <div class="card-body">
-                    <p style="font-size: 0.85rem; color: var(--text-sub);">楽譜をアップロード（または撮影）し、マイクに向かってピアノを弾くと自動で採点・可視化します！</p>
+                    <p style="font-size: 0.85rem; color: var(--text-sub);">楽譜ファイルを選び、マイクに向かってピアノを弾くと自動で採点・可視化します！</p>
                     <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                         <label class="file-input-label" style="width: 100%; justify-content: center; padding: 0.5rem;">
                             📄 楽譜ファイル・画像を選択
@@ -442,8 +442,8 @@
                         </label>
                         <span id="score-file-name" style="font-size: 0.75rem; color: var(--text-sub); text-align: center;">楽譜が未選択です（デフォルト曲でテスト可）</span>
                     </div>
-                    <div style="text-align: center; font-weight: 500; font-size: 0.85rem;" id="eval-status">準備完了：マイクに向かって演奏開始</div>
-                    <button type="button" class="success" id="start-eval-btn">🎙️ 自動採点スタンバイ</button>
+                    <div style="text-align: center; font-weight: 500; font-size: 0.85rem;" id="eval-status">準備完了：ボタンを押してスタート</div>
+                    <button type="button" class="success" id="start-eval-btn">🎙️ 自動採点スタート</button>
                     <div id="eval-result-summary" style="font-size: 0.8rem; font-weight: bold; text-align: center; min-height: 1.2rem;"></div>
                 </div>
             </div>
@@ -754,7 +754,7 @@
             tunerAnimationId = requestAnimationFrame(updateTuner);
         }
 
-        // --- 🎹 ピアノ演奏自動採点・可視化機能 ---
+        // --- 🎹 ピアノ演奏自動採点・可視化機能（修正版） ---
         let evalStream = null, evalAnalyser = null, evalIsRunning = false, evalAnimationId = null;
         const scoreUpload = document.getElementById('score-upload');
         const scoreFileName = document.getElementById('score-file-name');
@@ -762,15 +762,14 @@
         const evalStatus = document.getElementById('eval-status');
         const evalResultSummary = document.getElementById('eval-result-summary');
 
-        // サンプルのお手本データ（ド・レ・ミ・ファ・ソ）
-        const targetNotes = [60, 62, 64, 65, 67]; 
+        const targetNotes = [60, 62, 64, 65, 67]; // ド・レ・ミ・ファ・ソ
         let currentNoteIndex = 0;
         let correctCount = 0;
         let totalDetected = 0;
 
         scoreUpload.addEventListener('change', () => {
             if (scoreUpload.files.length > 0) {
-                scoreFileName.textContent = "選択中: " + scoreUpload.files[0].name + " (AI簡易変換完了)";
+                scoreFileName.textContent = "選択中: " + scoreUpload.files[0].name;
                 showToast("楽譜ファイルを読み込みました！");
             }
         });
@@ -797,9 +796,9 @@
                 correctCount = 0;
                 totalDetected = 0;
 
-                startEvalBtn.textContent = "■ 採点終了・レポートを見る";
+                startEvalBtn.textContent = "■ 採点終了・結果を見る";
                 startEvalBtn.classList.replace('success', 'danger');
-                evalStatus.textContent = "🔊 演奏を検出中（音を鳴らしてスタート！）";
+                evalStatus.textContent = "🎙️ 採点中：ピアノを弾いてください...";
                 evalResultSummary.textContent = "";
 
                 runEvaluationLoop();
@@ -813,16 +812,16 @@
             if (evalAnimationId) cancelAnimationFrame(evalAnimationId);
             if (evalStream) { evalStream.getTracks().forEach(t => t.stop()); evalStream = null; }
             
-            startEvalBtn.textContent = "🎙️ 自動採点スタンバイ";
+            startEvalBtn.textContent = "🎙️ 自動採点スタート";
             startEvalBtn.classList.replace('danger', 'success');
             
             if (totalDetected > 0) {
                 const rate = Math.round((correctCount / totalDetected) * 100);
-                evalStatus.textContent = `🎯 採点完了！正解率: ${rate}%`;
+                evalStatus.textContent = `🎯 採点終了！正解率: ${rate}%`;
                 evalResultSummary.style.color = rate >= 70 ? '#10b981' : '#f59e0b';
-                evalResultSummary.textContent = rate >= 70 ? "🎉 素晴らしい演奏です！不得意な音はありません。" : "💡 もう一度ゆっくりリズムを確認してみましょう！";
+                evalResultSummary.textContent = rate >= 70 ? "🎉 素晴らしい演奏です！" : "💡 もう一度ゆっくり練習してみましょう！";
             } else {
-                evalStatus.textContent = "採点がキャンセルされました。";
+                evalStatus.textContent = "音声を検知できませんでした。再度お試しください。";
                 evalResultSummary.textContent = "";
             }
         }
@@ -835,8 +834,8 @@
             for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
             rms = Math.sqrt(rms / buf.length);
 
-            // 環境音をカットする音量閾値 (rms >= 0.03)
-            if (rms >= 0.03) {
+            // 感度を調整（少し小さな音でも拾うように閾値を 0.015 に設定）
+            if (rms >= 0.015) {
                 const pitch = autoCorrelate(buf, audioCtx.sampleRate);
                 if (pitch !== -1) {
                     const midiNum = Math.round(12 * (Math.log(pitch / 440) / Math.log(2)) + 69);
@@ -849,7 +848,7 @@
                         evalStatus.style.color = '#10b981';
                         currentNoteIndex++;
                     } else {
-                        evalStatus.textContent = `⚠️ 違う音の可能性 (検出: ${midiNum} / 目標: ${expectedMidi})`;
+                        evalStatus.textContent = `⚠️ 違う音 (検出: ${midiNum} / 目標: ${expectedMidi})`;
                         evalStatus.style.color = '#f43f5e';
                     }
                 }
@@ -1298,10 +1297,10 @@
             return id;
         }
 
-        (function removeMessage(id) {
+        function removeMessage(id) {
             const el = document.getElementById(id);
             if (el) el.remove();
-        });
+        }
     </script>
 </body>
 </html>
