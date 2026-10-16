@@ -3,6 +3,7 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 const { GoogleGenAI } = require('@google/genai');
+const { marked } = require('marked');
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
@@ -13,7 +14,6 @@ app.use(express.static('public'));
 
 const chatSessions = {};
 
-// 503エラーなどのリトライ処理
 async function retryOperation(fn, retries = 3, delay = 2000) {
     for (let i = 0; i < retries; i++) {
         try {
@@ -37,14 +37,14 @@ app.post('/api/chat', upload.single('media'), async (req, res) => {
 
         if (!chatSessions[sessionId]) {
             chatSessions[sessionId] = ai.chats.create({
-                model: 'gemini-2.5-flash', // またはご利用のモデル名
+                model: 'gemini-3.6-flash',
                 config: {
                     systemInstruction: `あなたは音楽学習プラットフォーム「otomo」の優秀なAIアシスタントです。音楽理論、楽譜の読み方、楽器の練習方法などを分かりやすく教えてください。
                     
 【出力のルール】
 - 前置きの挨拶や不要な相槌（「〜ですね」「お答えします」など）は省き、結論から簡潔に答えてください。
-- 長文の段落は避け、要点は箇条書き（「- 」など）を使って分かりやすくまとめてください。
-- HTMLタグ（<p>, <ul>, <li> など）やMarkdownの特殊な装飾は一切使用せず、通常のテキストと改行のみで出力してください。`
+- 長文の段落は避け、要点は箇条書きを使って分かりやすくまとめてください。
+- またHTMLタグなどの余計な記述は表示させないようにしてください。`
                 }
             });
         }
@@ -75,11 +75,9 @@ app.post('/api/chat', upload.single('media'), async (req, res) => {
         });
 
         const rawText = response.text || "";
-        
-        // タグの混入を防ぐためのサニタイズ（念のためHTMLタグを除去）
-        const cleanText = rawText.replace(/<[^>]*>/g, '');
+        const htmlReply = marked.parse(rawText);
 
-        res.json({ reply: cleanText });
+        res.json({ reply: htmlReply });
     } catch (error) {
         console.error("API Error:", error);
         res.status(500).json({ error: "AIの応答取得に失敗しました。しばらく待ってから再度お試しください。" });
