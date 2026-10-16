@@ -327,7 +327,7 @@ function stopMetro() { clearInterval(metroTimer); metroOn = false; }
 function autoCorrelate(buf, sr) {
   let SIZE = buf.length, rms = 0;
   for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
-  if (Math.sqrt(rms / SIZE) < 0.01) return -1;
+  if (Math.sqrt(rms / SIZE) < 0.008) return -1; // 感度を向上
   let r1 = 0, r2 = SIZE - 1, th = 0.2;
   for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < th) { r1 = i; break; }
   for (let i = 1; i < SIZE / 2; i++) if (Math.abs(buf[SIZE - i]) < th) { r2 = SIZE - i; break; }
@@ -373,7 +373,7 @@ function updateTuner() {
   if (!tunerOn) return;
   const buf = new Float32Array(2048); tunerAnalyser.getFloatTimeDomainData(buf);
   let rms = 0; for (const v of buf) rms += v * v; rms = Math.sqrt(rms / buf.length);
-  if (rms < 0.02) { resetTunerUI(); }
+  if (rms < 0.01) { resetTunerUI(); }
   else {
     const pitch = autoCorrelate(buf, audioCtx.sampleRate);
     if (pitch > 0) {
@@ -591,6 +591,13 @@ const TOLL = () => $('micOn').checked ? 0.45 : 0.3;
 let lastScreenL = 0;
 function noteOnL(m, src) {
   if (src === 'screen') { playTone(m, getAudioContext().currentTime, 0.5); lastScreenL = performance.now(); }
+  
+  // マイク入力時にも画面の鍵盤を同期して光らせる
+  if (src === 'mic') {
+    const isTarget = [...reqL].some(n => n.midi === m);
+    flashL(m, isTarget ? 'ok' : 'ng');
+  }
+
   if (!runningL) return;
   const mic = src === 'mic', mode = $('mode').value;
   if (mode === 'practice') {
@@ -630,17 +637,19 @@ function micLoopL() {
   const buf = new Float32Array(2048); micAnalyserL.getFloatTimeDomainData(buf);
   const mute = performance.now() - lastScreenL < 700 || $('mode').value === 'listen';
   let rms = 0; for (const v of buf) rms += v * v; rms = Math.sqrt(rms / buf.length);
-  if (rms >= 0.035 && !mute) {
+  
+  // マイク感度（RMSしきい値を引き下げて反応しやすく改善）
+  if (rms >= 0.012 && !mute) {
     const pitch = autoCorrelate(buf, getAudioContext().sampleRate);
     if (pitch > 0) {
       const midi = Math.round(12 * Math.log2(pitch / 440) + 69);
       if (midi >= 48 && midi <= 83 && midi !== lastMicMidiL) {
         lastMicMidiL = midi;
         noteOnL(midi, 'mic');
-        setTimeout(() => { if (lastMicMidiL === midi) lastMicMidiL = -1; }, 200);
+        setTimeout(() => { if (lastMicMidiL === midi) lastMicMidiL = -1; }, 250);
       }
     }
-  } else if (rms < 0.015) { lastMicMidiL = -1; }
+  } else if (rms < 0.006) { lastMicMidiL = -1; }
   micRafL = requestAnimationFrame(micLoopL);
 }
 $('micOn').onchange = e => { if (!e.target.checked) stopMicL(); else if (runningL) startMicL(); };
