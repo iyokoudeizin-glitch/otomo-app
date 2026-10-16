@@ -1,164 +1,1085 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>otomo - 有料版認証</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background-color: #0f172a;
-      color: #f8fafc;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .auth-card {
-      background: #1e293b;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-    }
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: 1px solid #475569;
-      background: #0f172a;
-      color: #fff;
-      border-radius: 6px;
-      box-sizing: border-box;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 10px;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .btn-primary {
-      background: #3b82f6;
-      color: #fff;
-    }
-    .btn-secondary {
-      background: #334155;
-      color: #cbd5e1;
-    }
-    button:hover {
-      opacity: 0.9;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>otomo - AI音楽学習 & 楽譜プラットフォーム</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Noto+Music&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--p:#4f46e5;--ph:#4338ca;--bg:#f8fafc;--card:#fff;--tx:#1e293b;--sub:#64748b;--bd:#e2e8f0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);display:flex;flex-direction:column;min-height:100vh}
+header{background:var(--card);border-bottom:1px solid var(--bd);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center}
+header h1{font-size:1.25rem;color:var(--p)}header p{font-size:.85rem;color:var(--sub)}
+
+/* 認証画面用スタイル */
+#view-auth {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  padding: 2rem;
+}
+.auth-card {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+.auth-card h2 { margin-bottom: 10px; color: var(--p); }
+.auth-card p { font-size: 0.9rem; color: var(--sub); margin-bottom: 20px; }
+.auth-card input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+}
+.auth-card button {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* 画面切り替えビュー */
+.view-section{display:none}
+.view-section.active{display:flex;flex-direction:column;flex:1}
+
+.main{display:flex;flex:1;max-width:1400px;width:100%;margin:0 auto;gap:1.5rem;padding:1.5rem}
+.chat{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;min-height:500px}
+#chat-box{flex:1;padding:1.5rem;overflow-y:auto;display:flex;flex-direction:column;gap:1rem}
+.msg{max-width:80%;padding:.8rem 1rem;border-radius:12px;line-height:1.5;font-size:.95rem;word-break:break-word;white-space:pre-wrap}
+.msg.user{background:var(--p);color:#fff;align-self:flex-end}
+.msg.assistant{background:#f1f5f9;align-self:flex-start}
+#chat-form{display:flex;flex-direction:column;padding:1rem;border-top:1px solid var(--bd);gap:.5rem}
+#user-input{padding:.75rem 1rem;border:1px solid var(--bd);border-radius:8px;font-size:.95rem;outline:none}
+.row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem}
+.file-label{font-size:.85rem;color:var(--sub);cursor:pointer;padding:.3rem .5rem;border:1px dashed var(--bd);border-radius:6px}
+button,.btn{background:var(--p);color:#fff;border:0;padding:.6rem 1.1rem;border-radius:8px;font-weight:600;cursor:pointer;font-size:.85rem;transition:background .2s}
+button:hover,.btn:hover{background:var(--ph)}
+button.secondary{background:#64748b}button.secondary:hover{background:#475569}
+button.success,button.go{background:#10b981}button.success:hover,button.go:hover{background:#059669}
+button.danger,button.stop{background:#ef4444}button.danger:hover,button.stop:hover{background:#dc2626}
+button.on{background:var(--p)}
+.side{width:400px;display:flex;flex-direction:column;gap:1.2rem;overflow-y:auto;max-height:calc(100vh - 100px)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden;flex-shrink:0}
+.card-h{padding:.8rem 1.2rem;border-bottom:1px solid var(--bd);font-weight:600;background:#f8fafc}
+.card-b{padding:1rem 1.2rem;display:flex;flex-direction:column;gap:.8rem}
+.note{font-size:.85rem;color:var(--sub)}
+.center{text-align:center}
+.metro{text-align:center;font-size:1.5rem;font-weight:700;color:var(--p)}
+.tuner{background:#0f172a;color:#fff;padding:.9rem;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:.5rem}
+#tuner-note{font-size:2rem;font-weight:700;color:#38bdf8;height:2.8rem;display:flex;align-items:center}
+.meter{width:100%;height:12px;background:#334155;border-radius:6px;position:relative;overflow:hidden}
+.meter i{position:absolute;left:50%;top:0;bottom:0;width:4px;background:#f43f5e;transform:translateX(-50%)}
+#tuner-pointer{position:absolute;top:0;bottom:0;width:8px;background:#10b981;left:50%;transform:translateX(-50%);transition:left .1s;border-radius:4px}
+.tinfo{display:flex;justify-content:space-between;width:100%;font-size:.8rem;color:#94a3b8;font-family:'Fira Code',monospace}
+.launch{display:flex;gap:.75rem}
+.launch button{flex:1;background:#f1f5f9;color:var(--tx);border:2px solid var(--bd);padding:.75rem;font-size:.9rem}
+.launch button:hover{border-color:var(--p);background:#e0e7ff;color:var(--p)}
+
+/* Learn 画面CSS */
+.learn-container{max-width:1100px;width:100%;margin:0 auto;padding:1rem}
+.bar{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:.8rem;margin-bottom:.8rem;font-size:.85rem}
+.bar label{display:flex;align-items:center;gap:.3rem}
+select,input[type=number]{font:inherit;padding:.25rem .4rem;border:1px solid var(--bd);border-radius:6px}
+input[type=number]{width:4rem}
+#box{background:#fff;border:1px solid var(--bd);border-radius:12px;overflow-x:auto;margin-bottom:.8rem}
+canvas{display:block}
+#msg{min-height:1.6rem;text-align:center;font-weight:700;margin-bottom:.6rem}
+#midi{font-size:.8rem;color:var(--sub)}
+#kb{position:relative;display:flex;height:130px;background:#2a2d3a;padding:6px 6px 0;border-radius:10px}
+#kb .w{flex:1;background:#fff;border:1px solid #9aa1b5;border-radius:0 0 5px 5px;cursor:pointer;position:relative}
+#kb .w.tgt{background:#a5b4fc}#kb .w.ok{background:#86efac}#kb .w.ng{background:#fca5a5}
+#kb .b{position:absolute;top:6px;width:2.6%;height:62%;background:#14161f;transform:translateX(-50%);z-index:2;border-radius:0 0 4px 4px;cursor:pointer}
+#kb .b.tgt{background:#4f46e5}#kb .b.ok{background:#16a34a}#kb .b.ng{background:#dc2626}
+
+/* モーダル */
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;justify-content:center;align-items:center;padding:1rem}
+.mc{background:#fff;width:100%;max-width:1000px;height:90vh;border-radius:16px;display:flex;flex-direction:column;overflow:hidden}
+.mh,.mf{padding:.9rem 1.5rem;background:#f8fafc;display:flex;justify-content:space-between;align-items:center}
+.mh{border-bottom:1px solid var(--bd)}.mf{border-top:1px solid var(--bd);justify-content:flex-end}
+.mh h2{font-size:1.1rem;color:var(--p)}
+.mb{padding:1rem 1.5rem;flex:1;display:flex;flex-direction:column;gap:1rem;overflow-y:auto}
+#score-box{background:#fff;padding:12px;border-radius:8px;border:1px solid var(--bd);width:100%;max-height:380px;overflow:auto}
+#staffCanvas{display:block;max-width:100%}
+.toolbar{display:flex;gap:.5rem 1rem;flex-wrap:wrap;align-items:center;background:#f1f5f9;padding:.75rem;border-radius:8px;width:100%}
+.tg{display:flex;gap:.35rem;align-items:center;flex-wrap:wrap}
+.tl{font-size:.85rem;font-weight:700;color:var(--sub)}
+.kb-editor{display:flex;flex-direction:column;align-items:center;gap:.6rem;width:100%}
+.oct{display:flex;align-items:center;gap:.6rem;font-size:.9rem;font-weight:600;color:var(--sub)}
+.pk{width:100%;max-width:560px;height:150px;background:#2a2d3a;padding:8px 8px 0;border-radius:10px;display:flex}
+#keys{position:relative;flex:1;display:flex}
+.key{padding:0;border-radius:0 0 6px 6px;user-select:none;cursor:pointer;font-weight:700}
+.wk{flex:1;height:100%;background:#fff;color:#1b1f33;border:1px solid #9aa1b5;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:6px;font-size:.8rem}
+.wk:hover{background:#eef0f7}.wk:active{background:#c7cbf5}
+.bk{position:absolute;top:0;width:8%;height:60%;background:#14161f;border:1px solid #000;transform:translateX(-50%);z-index:2}
+.bk:hover{background:#2c3040}.bk:active{background:var(--p)}
+.kname{font-size:.65rem;color:#4a5168;font-family:'Fira Code',monospace;font-weight:400}
+.gen{background:#0f172a;border-radius:12px;padding:15px;color:#f8fafc}
+.gen input{width:100%;padding:10px 14px;font-size:1rem;font-family:'Fira Code',monospace;background:#0f172acc;border:1.5px solid #ffffff26;border-radius:8px;color:#fff;outline:none;margin-top:6px}
+.chip{background:#ffffff0d;border:1px solid #ffffff1a;color:#cbd5e1;padding:4px 10px;border-radius:20px;font-size:.75rem}
+.chip:hover{background:#ffffff26}
+.tab-vp{background:#090d16;border-radius:10px;padding:15px 10px;overflow-x:auto;margin-top:10px}
+.diagram-row{display:flex;margin-left:70px;margin-bottom:6px;min-width:max-content}
+.diagram{width:72px;display:flex;justify-content:center}
+.tab-grid{display:flex;flex-direction:column;min-width:max-content;font-family:'Fira Code',monospace}
+.tab-row{display:flex;align-items:center;height:30px}
+.slabel{width:70px;font-size:.75rem;font-weight:600;color:#a3abc7;text-align:right;padding-right:10px}
+.badge{width:72px;text-align:center;font-weight:700;color:#fb7185;border-radius:6px}
+.badge.unknown{color:#fcd34d;text-decoration:underline wavy}
+.badge.active{background:#fb71853a;outline:2px solid #fb7185}
+.sline{display:flex;align-items:center;position:relative;flex:1}
+.sline::before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:#59607e}
+.slot{width:72px;display:flex;justify-content:center;z-index:2}
+.fret{min-width:24px;height:24px;border-radius:5px;background:#1c2140;border:1px solid #3d4466;color:#7dd3fc;font-weight:600;font-size:.85rem;display:flex;align-items:center;justify-content:center}
+.fret.mute{color:#fca5a5;background:#2a1016;border-color:#7f1d1d}
+.fret.open{color:#6ee7b7;background:#0b2a22;border-color:#065f46}
+#toast{position:fixed;bottom:20px;right:20px;background:#10b981;color:#fff;padding:10px 18px;border-radius:8px;opacity:0;transform:translateY(50px);transition:.3s;z-index:2000}
+#toast.show{opacity:1;transform:none}#toast.error{background:#b91c1c}
+@media(max-width:900px){.main{flex-direction:column;padding:1rem}.chat{height:500px}.side{width:100%;max-height:none;overflow:visible}.mc{height:95vh}}
+</style>
 </head>
 <body>
+<header>
+  <h1>otomo</h1>
+  <div style="display:flex;align-items:center;gap:1rem;">
+    <p>AI Music Learning & Sheet Music Platform</p>
+    <button id="logout-btn" class="danger" style="display:none;padding:4px 10px;font-size:0.75rem;">ログアウト</button>
+  </div>
+</header>
 
-  <!-- 認証画面（未ログイン時に表示） -->
-  <div id="auth-container" class="auth-card">
-    <h2>🔒 otomo 有料版認証</h2>
-    <p style="font-size: 14px; color: #94a3b8; margin-bottom: 20px;">
-      メールアドレスとパスワードを入力してログインまたは新規登録してください。
-    </p>
-    
-    <input type="email" id="email" placeholder="メールアドレス" required />
-    <input type="password" id="password" placeholder="パスワード（6文字以上）" required />
-    
-    <button id="login-btn" class="btn-primary">ログイン</button>
-    <button id="signup-btn" class="btn-secondary">新規登録</button>
+<!-- AUTH VIEW (未ログイン時) -->
+<div id="view-auth" class="view-section active">
+  <div class="auth-card">
+    <h2>🔒 otomo 認証</h2>
+    <p>メールアドレスとパスワードを入力してください。</p>
+    <input type="email" id="auth-email" placeholder="メールアドレス" required />
+    <input type="password" id="auth-password" placeholder="パスワード（6文字以上）" required />
+    <button id="auth-login-btn" class="btn">ログイン</button>
+    <button id="auth-signup-btn" class="secondary" style="width:100%;padding:12px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:1rem;color:#fff;">新規登録</button>
+  </div>
+</div>
+
+<!-- MAIN VIEW (ログイン成功時) -->
+<div id="view-main" class="view-section">
+ <div class="main">
+  <div class="chat">
+   <div id="chat-box"><div class="msg assistant">こんにちは！otomoへようこそ。音楽の質問や、楽譜画像・演奏動画の分析もできます。</div></div>
+   <form id="chat-form">
+    <input type="text" id="user-input" placeholder="AIにメッセージを送る..." autocomplete="off">
+    <div class="row">
+     <label class="file-label">📁 画像・動画を添付<input type="file" id="media-file" accept="image/*,video/*" hidden></label>
+     <span id="file-name" class="note">選択されていません</span>
+     <button type="submit">送信</button>
+    </div>
+   </form>
   </div>
 
-  <!-- アプリ本体（ログイン成功時に表示） -->
-  <div id="app-container" class="auth-card" style="display: none;">
-    <h2>🎉 ようこそ otomo へ！</h2>
-    <p id="user-email-display" style="color: #94a3b8; margin-bottom: 20px;"></p>
-    <p style="color: #38bdf8; font-size: 14px; margin-bottom: 20px;">認証済みユーザーとしてコンテンツを利用できます。</p>
-    <button id="logout-btn" class="btn-secondary" style="background: #ef4444; color: white;">ログアウト</button>
+  <div class="side">
+   <div class="card"><div class="card-h">⏱️ メトロノーム</div><div class="card-b">
+    <div class="metro" id="tempo-display">120 BPM</div>
+    <input type="range" id="tempo-slider" min="40" max="240" value="120">
+    <button id="metronome-btn">スタート</button>
+   </div></div>
+
+   <div class="card"><div class="card-h">🎸 Webチューナー</div><div class="card-b">
+    <div class="tuner"><div id="tuner-note">--</div>
+     <div class="meter"><i></i><div id="tuner-pointer"></div></div>
+     <div class="tinfo"><span id="tuner-freq">-- Hz</span><span id="tuner-cents">-- cent</span></div></div>
+    <button id="tuner-btn">マイクを起動</button>
+   </div></div>
+
+   <div class="card"><div class="card-h">🎹 楽譜採点（otomo Learn）</div><div class="card-b">
+    <p class="note">楽譜を取り込み、MIDIキーボード・画面の鍵盤・マイクで演奏練習と採点ができます。</p>
+    <button class="success" id="open-learn">🎹 楽譜採点を開く</button>
+   </div></div>
+
+   <div class="card"><div class="card-h">🎧 音感トレ・コード聞き分け</div><div class="card-b">
+    <p class="note">鳴ったコードがメジャーかマイナーか当てよう！</p>
+    <div class="center" id="game-status" style="font-size:.9rem">音を鳴らしてスタート！</div>
+    <button class="success" id="play-game-chord">▶ コードを鳴らす</button>
+    <div style="display:flex;gap:.5rem">
+     <button class="secondary" style="flex:1" onclick="checkGame('major')">✨ メジャー</button>
+     <button class="secondary" style="flex:1" onclick="checkGame('minor')">🌙 マイナー</button>
+    </div>
+    <div id="game-result" class="center" style="font-size:.85rem;font-weight:700;min-height:1.2rem"></div>
+   </div></div>
+
+   <div class="card"><div class="card-h">🎼 楽譜メーカー</div><div class="card-b">
+    <p class="note">楽器を選択するとエディタが開きます：</p>
+    <div class="launch">
+     <button id="open-piano">🎹 ピアノ (五線譜)</button>
+     <button id="open-guitar">🎸 ギター (TAB譜)</button>
+    </div>
+   </div></div>
+  </div>
+ </div>
+</div>
+
+<!-- LEARN VIEW -->
+<div id="view-learn" class="view-section">
+ <div class="learn-container">
+  <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.8rem">
+   <button id="learn-back" class="secondary">← メインに戻る</button>
+   <h1 style="margin:0;font-size:1.2rem;color:var(--p)">🎹 otomo Learn</h1>
   </div>
 
-  <!-- Firebase (CDN) スクリプト -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { 
-      getAuth, 
-      signInWithEmailAndPassword, 
-      createUserWithEmailAndPassword,
-      onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  <div class="bar">
+   <label class="btn">📄 楽譜を読み込む<input type="file" id="file" accept=".xml,.musicxml,image/*,application/pdf" hidden></label>
+   <button id="sample" class="secondary">サンプル曲</button>
+   <span id="title" style="font-weight:700">サンプル：きらきら星</span>
+   <span id="midi">🎹 MIDI確認中…</span>
+  </div>
 
-    // あなたのFirebaseプロジェクト設定
-    const firebaseConfig = {
-      apiKey: "AIzaSyBailgLJCY2j4YewqhgxIrFBo-wRxixOf8", // ご自身のAPIキーに書き換えてください
-      authDomain: "otomo-8f479.firebaseapp.com",
-      projectId: "otomo-8f479",
-      storageBucket: "otomo-8f479.appspot.com",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
+  <div class="bar">
+   <label>モード<select id="mode"><option value="practice">練習（正しい音で次へ）</option><option value="test">テスト（採点）</option><option value="listen">お手本を聴く</option></select></label>
+   <label>手<select id="hand"><option value="B">両手</option><option value="R">右手のみ</option><option value="L">左手のみ</option></select></label>
+   <label>テンポ <input type="range" id="bpm" min="40" max="200" value="80"><b id="bpmv">80</b></label>
+   <label>小節 <input type="number" id="ma" min="1" value="1">〜<input type="number" id="mb" min="1" placeholder="末尾"></label>
+   <label><input type="checkbox" id="loop">ループ</label>
+   <label><input type="checkbox" id="micOn">🎙️ マイク入力（アコースティックピアノ）</label><span id="micst" style="font-size:.8rem;color:var(--sub)"></span>
+   <button class="go" id="run">▶ スタート</button>
+  </div>
+
+  <div id="msg">スタートを押して、MIDIキーボードか画面の鍵盤で弾いてください</div>
+  <div id="box"><canvas id="cv" height="240"></canvas></div>
+  <div id="kb"></div>
+  <p class="note" style="margin-top:.6rem">入力：MIDIキーボード（USB/Bluetooth）、画面の鍵盤、マイク入力（単音ピッチ検出）。マイクは静かな場所でご使用ください。<br>対応形式：MusicXML（.xml / .musicxml）。画像・PDFはAI変換サーバー（/api/transcribe）が必要です。</p>
+ </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal"><div class="mc">
+ <div class="mh"><h2 id="modal-title"></h2><button class="secondary" id="close1">閉じる</button></div>
+ <div class="mb">
+  <div id="piano-sec" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:1rem">
+   <div class="toolbar">
+    <div class="tg"><span class="tl">長さ</span>
+     <button class="secondary" data-dur="4">全音符</button><button class="secondary" data-dur="2">2分</button>
+     <button class="secondary on" data-dur="1">4分</button><button class="secondary" data-dur="0.5">8分</button>
+     <button class="secondary" data-dur="0.25">16分</button><button class="secondary" id="add-rest">＋休符</button></div>
+    <div class="tg"><span class="tl">黒鍵</span>
+     <button class="secondary on" data-acc="#">♯</button><button class="secondary" data-acc="b">♭</button></div>
+    <div class="tg"><span class="tl">拍子</span>
+     <select id="piano-ts"><option value="4">4/4</option><option value="3">3/4</option><option value="2">2/4</option></select></div>
+   </div>
+   <div id="score-box"><canvas id="staffCanvas" width="750" height="230"></canvas></div>
+   <div class="kb-editor">
+    <div class="oct"><button class="secondary" id="oct-down">◀ 低く</button><span id="oct-label"></span><button class="secondary" id="oct-up">高く ▶</button></div>
+    <div class="pk"><div id="keys"></div></div>
+   </div>
+   <div style="display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center">
+    <button class="success" id="play-score">▶ 再生</button>
+    <button class="secondary" id="undo">↶ 1つ戻す</button><button class="secondary" id="redo">↷ やり直す</button>
+    <button class="danger" id="clear">すべて消す</button><button id="score-img">画像にする</button>
+   </div>
+   <div id="score-img-out" hidden style="width:100%;text-align:center"><img id="score-img-el" alt="楽譜" style="max-width:100%;border:1px solid #ccc;border-radius:8px"></div>
+  </div>
+
+  <div id="guitar-sec" style="display:none;flex-direction:column;gap:1rem;width:100%">
+   <div class="gen">
+    <label for="chordInput" style="font-size:.85rem">コード進行（カンマかスペース区切り 例: C, G, Am, F）</label>
+    <input id="chordInput" value="C, G, Am, F" spellcheck="false">
+    <p id="chord-warn" style="color:#fcd34d;font-size:.85rem;margin-top:5px"></p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center">
+     <span class="note">プリセット:</span>
+     <button class="chip" onclick="setChords('C, G, Am, F')">王道進行</button>
+     <button class="chip" onclick="setChords('F, G, Em, Am')">小室進行</button>
+     <button class="chip" onclick="setChords('Dm7, G7, CM7, Am7')">ツーファイブ</button>
+    </div>
+   </div>
+   <div class="gen">
+    <div class="row"><b>生成されたタブ譜とコード押さえ方</b>
+     <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="success" id="play-chords">▶ 再生</button>
+      <button class="secondary" onclick="copyTextTab()">📋 テキストコピー</button>
+      <button onclick="downloadImageTab()">🖼️ 画像化 (PNG)</button>
+     </div></div>
+    <div class="tab-vp" id="tabViewport"><div class="diagram-row" id="diagramRow"></div><div class="tab-grid" id="tabGrid"></div></div>
+    <div id="tab-img-out" hidden style="margin-top:15px;text-align:center"><img id="tab-img-el" alt="タブ譜" style="max-width:100%;border-radius:8px"></div>
+   </div>
+  </div>
+ </div>
+ <div class="mf"><button class="secondary" id="close2">閉じる</button></div>
+</div></div>
+
+<div id="toast"></div>
+
+<!-- Firebase (CDN) スクリプト -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { 
+    getAuth, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+  // ご自身のFirebase設定（APIキーを正しく設定してください）
+  const firebaseConfig = {
+    apiKey: "AIzaSyBailgLJCY2j4YewqhgxIrFBo-wRxixOf8", // ← ご自身のAPIキーを入力してください
+    authDomain: "otomo-8f479.firebaseapp.com",
+    projectId: "otomo-8f479",
+    storageBucket: "otomo-8f479.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  const viewAuth = document.getElementById('view-auth');
+  const viewMain = document.getElementById('view-main');
+  const viewLearn = document.getElementById('view-learn');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  // 認証状態の監視
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      viewAuth.classList.remove('active');
+      viewMain.classList.add('active');
+      logoutBtn.style.display = 'block';
+    } else {
+      viewAuth.classList.add('active');
+      viewMain.classList.remove('active');
+      viewLearn.classList.remove('active');
+      logoutBtn.style.display = 'none';
+    }
+  });
+
+  // ログイン
+  document.getElementById('auth-login-btn').addEventListener('click', async () => {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      alert('ログインエラー: ' + error.message);
+    }
+  });
+
+  // 新規登録
+  document.getElementById('auth-signup-btn').addEventListener('click', async () => {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      alert('登録成功しました！');
+    } catch (error) {
+      alert('登録エラー: ' + error.message);
+    }
+  });
+
+  // ログアウト
+  logoutBtn.addEventListener('click', async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      alert('ログアウトエラー: ' + error.message);
+    }
+  });
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+
+// ---------- 画面切り替え ----------
+function switchView(view) {
+  $('view-main').classList.toggle('active', view === 'main');
+  $('view-learn').classList.toggle('active', view === 'learn');
+  if (view === 'learn') resizeLearn();
+  else stopLearn();
+}
+$('open-learn').onclick = () => switchView('learn');
+$('learn-back').onclick = () => switchView('main');
+
+// ---------- 共通 Web Audio ----------
+let audioCtx = null, masterOut = null;
+function getAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterOut = audioCtx.createDynamicsCompressor();
+    masterOut.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+const midiToFreq = m => 440 * Math.pow(2, (m - 69) / 12);
+function showToast(msg, type = 'ok') {
+  const t = $('toast'); t.textContent = msg; t.className = type + ' show';
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function playTone(midi, when, dur) {
+  const ctx = getAudioContext(), f = midiToFreq(midi);
+  const out = ctx.createGain(), filter = ctx.createBiquadFilter(), osc = ctx.createOscillator();
+  filter.type = 'lowpass'; filter.frequency.value = Math.min(6000, f * 8);
+  out.gain.setValueAtTime(0.0001, when);
+  out.gain.exponentialRampToValueAtTime(0.3, when + 0.01);
+  out.gain.exponentialRampToValueAtTime(0.0001, when + dur + 0.3);
+  osc.type = 'triangle'; osc.frequency.value = f;
+  osc.connect(filter); filter.connect(out); out.connect(masterOut);
+  osc.start(when); osc.stop(when + dur + 0.35);
+}
+
+// ---------- メトロノーム ----------
+let bpm = 120, metroOn = false, metroTimer = null, beat = 0;
+$('tempo-slider').addEventListener('input', e => {
+  bpm = +e.target.value; $('tempo-display').textContent = bpm + ' BPM';
+  if (metroOn) { stopMetro(); startMetro(); }
+});
+$('metronome-btn').addEventListener('click', () => {
+  const b = $('metronome-btn');
+  if (metroOn) { stopMetro(); b.textContent = 'スタート'; b.classList.remove('danger'); }
+  else { startMetro(); b.textContent = 'ストップ'; b.classList.add('danger'); }
+});
+function clickSound() {
+  const ctx = getAudioContext(), o = ctx.createOscillator(), g = ctx.createGain();
+  o.frequency.value = beat === 0 ? 1600 : 1000;
+  g.gain.setValueAtTime(0.0001, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime + 0.002);
+  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.05);
+  o.connect(g); g.connect(masterOut); o.start(); o.stop(ctx.currentTime + 0.06);
+  beat = (beat + 1) % 4;
+}
+function startMetro() { beat = 0; clickSound(); metroTimer = setInterval(clickSound, 60000 / bpm); metroOn = true; }
+function stopMetro() { clearInterval(metroTimer); metroOn = false; }
+
+// ---------- 音程検出 (自己相関) ----------
+function autoCorrelate(buf, sr) {
+  let SIZE = buf.length, rms = 0;
+  for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
+  if (Math.sqrt(rms / SIZE) < 0.008) return -1;
+  let r1 = 0, r2 = SIZE - 1, th = 0.2;
+  for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < th) { r1 = i; break; }
+  for (let i = 1; i < SIZE / 2; i++) if (Math.abs(buf[SIZE - i]) < th) { r2 = SIZE - i; break; }
+  buf = buf.slice(r1, r2); SIZE = buf.length;
+  if (SIZE < 4) return -1;
+  const c = new Array(SIZE).fill(0);
+  for (let i = 0; i < SIZE; i++) for (let j = 0; j < SIZE - i; j++) c[i] += buf[j] * buf[j + i];
+  let d = 0; while (d < SIZE - 1 && c[d] > c[d + 1]) d++;
+  let mv = -1, mp = -1;
+  for (let i = d; i < SIZE; i++) if (c[i] > mv) { mv = c[i]; mp = i; }
+  if (mp < 1 || mp >= SIZE - 1) return -1;
+  let T0 = mp, x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
+  const a = (x1 + x3 - 2 * x2) / 2, b = (x3 - x1) / 2;
+  if (a) T0 -= b / (2 * a);
+  return sr / T0;
+}
+
+// ---------- Webチューナー ----------
+const noteStrings = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+let tunerStream = null, tunerAnalyser = null, tunerOn = false, tunerRaf = null;
+$('tuner-btn').addEventListener('click', () => tunerOn ? stopTuner() : startTuner());
+async function startTuner() {
+  try {
+    tunerStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const ctx = getAudioContext();
+    tunerAnalyser = ctx.createAnalyser(); tunerAnalyser.fftSize = 2048;
+    ctx.createMediaStreamSource(tunerStream).connect(tunerAnalyser);
+    tunerOn = true; $('tuner-btn').textContent = 'マイクを停止'; $('tuner-btn').classList.add('danger');
+    updateTuner();
+  } catch { showToast('マイクが利用できません', 'error'); }
+}
+function resetTunerUI() {
+  $('tuner-note').textContent = '--'; $('tuner-freq').textContent = '-- Hz';
+  $('tuner-cents').textContent = '-- cent'; $('tuner-pointer').style.left = '50%';
+}
+function stopTuner() {
+  tunerOn = false; cancelAnimationFrame(tunerRaf);
+  if (tunerStream) { tunerStream.getTracks().forEach(t => t.stop()); tunerStream = null; }
+  $('tuner-btn').textContent = 'マイクを起動'; $('tuner-btn').classList.remove('danger');
+  resetTunerUI();
+}
+function updateTuner() {
+  if (!tunerOn) return;
+  const buf = new Float32Array(2048); tunerAnalyser.getFloatTimeDomainData(buf);
+  let rms = 0; for (const v of buf) rms += v * v; rms = Math.sqrt(rms / buf.length);
+  if (rms < 0.01) { resetTunerUI(); }
+  else {
+    const pitch = autoCorrelate(buf, audioCtx.sampleRate);
+    if (pitch > 0) {
+      const n = Math.round(12 * Math.log2(pitch / 440) + 69);
+      const exp = 440 * Math.pow(2, (n - 69) / 12);
+      const cents = Math.floor(1200 * Math.log2(pitch / exp));
+      $('tuner-note').textContent = noteStrings[((n % 12) + 12) % 12] + (Math.floor(n / 12) - 1);
+      $('tuner-freq').textContent = pitch.toFixed(1) + ' Hz';
+      $('tuner-cents').textContent = (cents >= 0 ? '+' : '') + cents + ' cent';
+      $('tuner-pointer').style.left = Math.max(5, Math.min(95, 50 + cents / 50 * 45)) + '%';
+      $('tuner-pointer').style.background = Math.abs(cents) < 5 ? '#10b981' : '#f43f5e';
+    }
+  }
+  tunerRaf = requestAnimationFrame(updateTuner);
+}
+
+// ---------- 音感トレ ----------
+let gameType = '';
+$('play-game-chord').addEventListener('click', () => {
+  const ctx = getAudioContext();
+  gameType = Math.random() > 0.5 ? 'major' : 'minor';
+  [60, gameType === 'major' ? 64 : 63, 67].forEach((m, i) => playTone(m, ctx.currentTime + i * 0.03, 1.0));
+  $('game-status').textContent = '音が鳴りました！どちらの響きですか？';
+  $('game-result').textContent = '';
+});
+function checkGame(type) {
+  if (!gameType) { showToast('まず「コードを鳴らす」を押してください', 'error'); return; }
+  const r = $('game-result');
+  if (type === gameType) { r.style.color = '#10b981'; r.textContent = '🎉 正解！素晴らしい耳ですね！'; }
+  else { r.style.color = '#ef4444'; r.textContent = '❌ 残念！もう一度聴き比べてみましょう。'; }
+}
+
+// ---------- OTOMO LEARN ----------
+const LET_L = { C:0, D:1, E:2, F:3, G:4, A:5, B:6 }, PCS_L = { C:0, D:2, E:4, F:5, G:7, A:9, B:11 };
+const mkNote = (step, alt, oc, h, b, d) => ({ step, alt, oc, h, b, d, midi: 12 * (oc + 1) + PCS_L[step] + alt, s: '' });
+let song = { notes: [], ms: [0], total: 0 };
+
+function seq(str, h) {
+  let b = 0; const r = [];
+  str.split(' ').forEach(t => {
+    const m = t.match(/^([A-G])([#b]?)(\d):([\d.]+)$/), d = +m[4];
+    r.push(mkNote(m[1], m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0, +m[3], h, b, d)); b += d;
+  });
+  return r;
+}
+function setSong(notes, ms, name) {
+  notes.sort((a, b) => a.b - b.b);
+  const total = Math.max(0, ...notes.map(n => n.b + n.d));
+  if (!ms || !ms.length) { ms = []; for (let b = 0; b < total; b += 4) ms.push(b); }
+  song = { notes, ms, total }; $('title').textContent = name;
+  $('ma').value = 1; $('mb').value = ''; $('mb').max = ms.length;
+  stopLearn(); resetLearnStates(); resizeLearn();
+}
+function loadSample() {
+  setSong([...seq('C4:1 C4:1 G4:1 G4:1 A4:1 A4:1 G4:2 F4:1 F4:1 E4:1 E4:1 D4:1 D4:1 C4:2', 'R'),
+           ...seq('C3:4 F3:2 C3:2 F3:2 C3:2 G3:2 C3:2', 'L')], null, 'サンプル：きらきら星');
+}
+function parseXML(txt) {
+  const x = new DOMParser().parseFromString(txt, 'text/xml');
+  if (x.querySelector('parsererror')) throw new Error('XML');
+  const notes = [], ms = [];
+  [...x.querySelectorAll('part')].forEach((p, pi) => {
+    let div = 1, time = 0, last = 0;
+    [...p.children].filter(e => e.tagName === 'measure').forEach(me => {
+      if (pi === 0) ms.push(time / div);
+      [...me.children].forEach(c => {
+        const g = t => c.querySelector(t)?.textContent;
+        if (c.tagName === 'attributes') { const d = c.querySelector('divisions'); if (d) div = +d.textContent; }
+        else if (c.tagName === 'backup') time -= +g('duration');
+        else if (c.tagName === 'forward') time += +g('duration');
+        else if (c.tagName === 'note') {
+          const dur = +g('duration') || 0, chord = !!c.querySelector('chord');
+          if (!chord) last = time;
+          if (c.querySelector('pitch') && !c.querySelector('grace') && !c.querySelector('tie[type=stop]')) {
+            const stf = +g('staff') || 0, h = stf ? (stf === 1 ? 'R' : 'L') : (pi === 0 ? 'R' : 'L');
+            notes.push(mkNote(g('pitch > step'), +(g('pitch > alter') || 0), +g('pitch > octave'), h, last / div, dur / div));
+          }
+          if (!chord) time += dur;
+        }
+      });
+    });
+  });
+  if (!notes.length) throw new Error('empty');
+  return { notes, ms };
+}
+$('file').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    if (/\.(xml|musicxml)$/i.test(f.name)) {
+      const r = parseXML(await f.text()); setSong(r.notes, r.ms, f.name); sayLearn('読み込みました！');
+    } else {
+      sayLearn('AIで楽譜を変換中…');
+      const fd = new FormData(); fd.append('file', f);
+      const res = await fetch('/api/transcribe', { method: 'POST', body: fd });
+      const r = parseXML((await res.json()).musicxml); setSong(r.notes, r.ms, f.name); sayLearn('変換しました！');
+    }
+  } catch { sayLearn('読み込めませんでした（画像/PDFは /api/transcribe のサーバーが必要です）', '#ef4444'); }
+  e.target.value = '';
+});
+$('sample').onclick = loadSample;
+
+const cvL = $('cv'), gL = cvL.getContext('2d');
+const LEFT_L = 70, PPB_L = 48, GAP_L = 10, TT_L = 50, TB_L = 90, BT_L = 150, BB_L = 190;
+const XL = b => LEFT_L + b * PPB_L;
+let cursorL = null, reqL = new Set();
+function resizeLearn() { cvL.width = Math.max($('box').clientWidth, XL(song.total) + 60); drawLearn(); }
+window.addEventListener('resize', () => { if ($('view-learn').classList.contains('active')) resizeLearn(); });
+
+function drawLearn() {
+  const W = cvL.width, H = cvL.height;
+  gL.fillStyle = '#fff'; gL.fillRect(0, 0, W, H); gL.strokeStyle = gL.fillStyle = '#111'; gL.lineWidth = 1;
+  [TT_L, BT_L].forEach(t => { for (let i = 0; i < 5; i++) { gL.beginPath(); gL.moveTo(8, t + i * GAP_L); gL.lineTo(W, t + i * GAP_L); gL.stroke(); } });
+  gL.font = '40px "Noto Music",serif'; gL.fillText('𝄞', 14, TT_L + 33); gL.fillText('𝄢', 14, BT_L + 20);
+  gL.font = '10px sans-serif';
+  song.ms.forEach((m, i) => {
+    gL.beginPath(); gL.moveTo(XL(m) - 6, TT_L); gL.lineTo(XL(m) - 6, BB_L); gL.stroke(); gL.fillText(i + 1, XL(m) - 4, TT_L - 8);
+  });
+  song.notes.forEach(drawNoteL);
+  if (cursorL !== null) { gL.strokeStyle = '#f97316'; gL.lineWidth = 2; gL.beginPath(); gL.moveTo(XL(cursorL), TT_L - 14); gL.lineTo(XL(cursorL), BB_L + 14); gL.stroke(); }
+}
+function drawNoteL(n) {
+  const treble = n.h === 'R', step = n.oc * 7 + LET_L[n.step], rel = step - (treble ? 30 : 18);
+  const base = treble ? TB_L : BB_L, y = base - rel * GAP_L / 2, x = XL(n.b);
+  const col = n.s === 'hit' ? '#10b981' : n.s === 'miss' ? '#ef4444' : reqL.has(n) ? '#4f46e5' : '#111';
+  gL.strokeStyle = gL.fillStyle = col; gL.lineWidth = 1;
+  for (let r = -2; r >= rel; r -= 2) { const ly = base - r * 5; gL.beginPath(); gL.moveTo(x - 9, ly); gL.lineTo(x + 9, ly); gL.stroke(); }
+  for (let r = 10; r <= rel; r += 2) { const ly = base - r * 5; gL.beginPath(); gL.moveTo(x - 9, ly); gL.lineTo(x + 9, ly); gL.stroke(); }
+  gL.lineWidth = 1.5; gL.beginPath(); gL.ellipse(x, y, 5.5, 4, -Math.PI / 6, 0, 7);
+  n.d >= 2 ? gL.stroke() : gL.fill();
+  if (n.alt) { gL.font = '16px serif'; gL.fillText(n.alt > 0 ? '♯' : '♭', x - 17, y + 5); }
+  if (n.d < 4) {
+    const up = rel < 4, sx = up ? x + 5 : x - 5, ey = up ? y - 30 : y + 30;
+    gL.beginPath(); gL.moveTo(sx, y); gL.lineTo(sx, ey); gL.stroke();
+    if (n.d <= 0.5) { gL.beginPath(); gL.moveTo(sx, ey); gL.quadraticCurveTo(sx + 10, ey + (up ? 8 : -8), sx + 7, ey + (up ? 16 : -16)); gL.stroke(); }
+  }
+}
+function scrollToL(b) { $('box').scrollLeft = Math.max(0, XL(b) - $('box').clientWidth * 0.3); }
+
+const kbL = $('kb'), keyElL = {};
+(function () {
+  const lo = 48, hi = 83, whites = []; for (let m = lo; m <= hi; m++) if (![1,3,6,8,10].includes(m % 12)) whites.push(m);
+  for (let m = lo; m <= hi; m++) {
+    const black = [1,3,6,8,10].includes(m % 12), d = document.createElement('div');
+    d.className = black ? 'b' : 'w'; d.dataset.m = m;
+    if (black) d.style.left = (whites.filter(w => w < m).length / whites.length * 96 + 0.6 + 2) + '%';
+    d.addEventListener('pointerdown', e => { e.preventDefault(); noteOnL(m, 'screen'); });
+    kbL.appendChild(d); keyElL[m] = d;
+  }
+})();
+function flashL(m, cls) { const k = keyElL[m]; if (!k) return; k.classList.add(cls); setTimeout(() => k.classList.remove(cls), 250); }
+function markTargetsL() {
+  Object.values(keyElL).forEach(k => k.classList.remove('tgt'));
+  reqL.forEach(n => keyElL[n.midi]?.classList.add('tgt'));
+}
+
+let runningL = false, selL = [], stepsL = [], siL = 0, mistakesL = 0, hitsL = 0, wrongL = 0;
+let t0L = 0, spbL = 0, rsL = 0, reL = 0, rafL = null;
+const sayLearn = (t, c = '#1e293b') => { $('msg').textContent = t; $('msg').style.color = c; };
+function resetLearnStates() { song.notes.forEach(n => n.s = ''); reqL = new Set(); cursorL = null; markTargetsL(); }
+
+function rangeL() {
+  const a = Math.max(1, +$('ma').value || 1), b = +$('mb').value || song.ms.length;
+  rsL = song.ms[Math.min(a, song.ms.length) - 1] ?? 0; reL = song.ms[b] ?? song.total;
+  if (reL <= rsL) reL = song.total;
+}
+function startLearn() {
+  if (!song.notes.length) return;
+  getAudioContext(); resetLearnStates(); rangeL();
+  const h = $('hand').value, mode = $('mode').value;
+  selL = song.notes.filter(n => (h === 'B' || n.h === h) && n.b >= rsL - 1e-6 && n.b < reL - 1e-6);
+  if (!selL.length) { sayLearn('この範囲に音符がありません', '#ef4444'); return; }
+  runningL = true; hitsL = wrongL = mistakesL = 0;
+  $('run').textContent = '■ ストップ'; $('run').className = 'stop';
+  if ($('micOn').checked && mode !== 'listen') startMicL();
+  if (mode === 'practice') {
+    const bs = [...new Set(selL.map(n => n.b))].sort((a, b) => a - b);
+    stepsL = bs.map(b => selL.filter(n => n.b === b)); siL = 0; setStepL();
+    sayLearn('光っている音を弾いてください');
+  } else {
+    spbL = 60 / +$('bpm').value;
+    const lead = mode === 'test' ? 4 : 0.3 / spbL; t0L = getAudioContext().currentTime + lead * spbL;
+    if (mode === 'test') for (let i = 0; i < 4; i++) playTone(i ? 84 : 91, t0L - (4 - i) * spbL, 0.05);
+    if (mode === 'listen') selL.forEach(n => playTone(n.midi, t0L + (n.b - rsL) * spbL, n.d * spbL * 0.95));
+    sayLearn(mode === 'test' ? 'カウント後、楽譜どおりに弾いてください' : '再生中…');
+    frameL();
+  }
+}
+function setStepL() {
+  reqL = new Set(stepsL[siL]); cursorL = stepsL[siL][0].b; markTargetsL(); drawLearn(); scrollToL(cursorL);
+}
+function stopLearn() {
+  runningL = false; cancelAnimationFrame(rafL); stopMicL();
+  $('run').textContent = '▶ スタート'; $('run').className = 'go';
+}
+function finishL(text) {
+  stopLearn(); reqL = new Set(); markTargetsL(); cursorL = null; drawLearn(); sayLearn(text, '#10b981');
+  if ($('loop').checked && $('mode').value !== 'test') setTimeout(startLearn, 600);
+}
+function frameL() {
+  if (!runningL) return;
+  const now = getAudioContext().currentTime, beat = rsL + (now - t0L) / spbL;
+  cursorL = beat;
+  if ($('mode').value === 'test') selL.forEach(n => { if (!n.s && now - (t0L + (n.b - rsL) * spbL) > TOLL()) n.s = 'miss'; });
+  if (beat >= reL + 0.3 / spbL) {
+    if ($('mode').value === 'test') {
+      const acc = Math.round(hitsL / selL.length * 100);
+      finishL(`🎯 正解 ${hitsL}/${selL.length}（${acc}%） ミス・余計な音 ${selL.length - hitsL + wrongL} ${acc >= 80 ? '🎉 素晴らしい！' : '💡 テンポを落として練習しましょう'}`);
+    } else finishL('再生終了');
+    return;
+  }
+  drawLearn(); if (beat > rsL) scrollToL(beat);
+  rafL = requestAnimationFrame(frameL);
+}
+const TOLL = () => $('micOn').checked ? 0.45 : 0.3;
+let lastScreenL = 0;
+function noteOnL(m, src) {
+  if (src === 'screen') { playTone(m, getAudioContext().currentTime, 0.5); lastScreenL = performance.now(); }
+  if (src === 'mic') {
+    const isTarget = [...reqL].some(n => n.midi === m);
+    flashL(m, isTarget ? 'ok' : 'ng');
+  }
+
+  if (!runningL) return;
+  const mic = src === 'mic', mode = $('mode').value;
+  if (mode === 'practice') {
+    const hit = [...reqL].find(n => n.midi === m);
+    if (hit) {
+      hit.s = 'hit'; reqL.delete(hit); flashL(m, 'ok');
+      if (!reqL.size) {
+        if (++siL >= stepsL.length) { finishL(`✅ 完了！ミス ${mistakesL} 回`); return; }
+        setStepL(); sayLearn('その調子！');
+      } else { markTargetsL(); drawLearn(); }
+    } else if (!mic) { mistakesL++; flashL(m, 'ng'); sayLearn('違う音です（ミス ' + mistakesL + '）', '#ef4444'); }
+  } else if (mode === 'test') {
+    const now = getAudioContext().currentTime;
+    const n = selL.find(n => !n.s && n.midi === m && Math.abs(now - (t0L + (n.b - rsL) * spbL)) <= TOLL());
+    if (n) { n.s = 'hit'; hitsL++; flashL(m, 'ok'); } else if (!mic) { wrongL++; flashL(m, 'ng'); }
+  }
+}
+
+// ---------- マイク入力 ----------
+let micStreamL = null, micAnalyserL = null, micRafL = null, lastMicMidiL = -1;
+async function startMicL() {
+  if (micStreamL) return;
+  try {
+    micStreamL = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    const c = getAudioContext(); micAnalyserL = c.createAnalyser(); micAnalyserL.fftSize = 2048;
+    c.createMediaStreamSource(micStreamL).connect(micAnalyserL);
+    $('micst').textContent = '🎙️ マイク入力中'; micLoopL();
+  } catch { $('micOn').checked = false; $('micst').textContent = 'マイクを使えません'; }
+}
+function stopMicL() {
+  cancelAnimationFrame(micRafL); micRafL = null;
+  if (micStreamL) { micStreamL.getTracks().forEach(t => t.stop()); micStreamL = null; }
+  micAnalyserL = null; $('micst').textContent = '';
+}
+function micLoopL() {
+  if (!micStreamL || !micAnalyserL) return;
+  const buf = new Float32Array(2048); micAnalyserL.getFloatTimeDomainData(buf);
+  const mute = performance.now() - lastScreenL < 700 || $('mode').value === 'listen';
+  let rms = 0; for (const v of buf) rms += v * v; rms = Math.sqrt(rms / buf.length);
+  if (rms >= 0.012 && !mute) {
+    const pitch = autoCorrelate(buf, getAudioContext().sampleRate);
+    if (pitch > 0) {
+      const midi = Math.round(12 * Math.log2(pitch / 440) + 69);
+      if (midi >= 48 && midi <= 83 && midi !== lastMicMidiL) {
+        lastMicMidiL = midi;
+        noteOnL(midi, 'mic');
+        setTimeout(() => { if (lastMicMidiL === midi) lastMicMidiL = -1; }, 250);
+      }
+    }
+  } else if (rms < 0.006) { lastMicMidiL = -1; }
+  micRafL = requestAnimationFrame(micLoopL);
+}
+$('micOn').onchange = e => { if (!e.target.checked) stopMicL(); else if (runningL) startMicL(); };
+$('run').onclick = () => runningL ? (stopLearn(), sayLearn('停止しました')) : startLearn();
+$('bpm').oninput = e => $('bpmv').textContent = e.target.value;
+$('mode').onchange = $('hand').onchange = () => { stopLearn(); resetLearnStates(); drawLearn(); };
+
+// ---------- MIDI入力共通登録 ----------
+if (navigator.requestMIDIAccess) {
+  navigator.requestMIDIAccess().then(a => {
+    const scan = () => {
+      const ins = [...a.inputs.values()];
+      ins.forEach(i => i.onmidimessage = e => {
+        const [s, n, v] = e.data;
+        if ((s & 0xf0) === 0x90 && v > 0) {
+          if ($('view-learn').classList.contains('active')) noteOnL(n, 'midi');
+        }
+      });
+      $('midi').textContent = ins.length ? '🎹 MIDI接続中: ' + ins.map(i => i.name).join(', ') : '🎹 MIDI未接続（画面の鍵盤が使えます）';
     };
+    scan(); a.onstatechange = scan;
+  }, () => $('midi').textContent = '🎹 MIDI許可なし');
+} else $('midi').textContent = '🎹 このブラウザはMIDI非対応';
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+loadSample();
 
-    const authContainer = document.getElementById('auth-container');
-    const appContainer = document.getElementById('app-container');
-    const userEmailDisplay = document.getElementById('user-email-display');
+// ---------- モーダル (楽譜メーカー) ----------
+function openModal(inst) {
+  $('modal').style.display = 'flex';
+  $('modal-title').textContent = inst === 'piano' ? '🎹 ピアノ 楽譜エディタ (五線譜)' : '🎸 ギター 楽譜エディタ (TAB譜)';
+  $('piano-sec').style.display = inst === 'piano' ? 'flex' : 'none';
+  $('guitar-sec').style.display = inst === 'guitar' ? 'flex' : 'none';
+  if (inst === 'piano') { buildKeyboard(); redrawStaff(); } else renderTab();
+}
+function closeModal() { $('modal').style.display = 'none'; stopScore(); stopChords(); }
+$('open-piano').onclick = () => openModal('piano');
+$('open-guitar').onclick = () => openModal('guitar');
+$('close1').onclick = $('close2').onclick = closeModal;
 
-    // 認証状態の監視（ログイン状態を保持）
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        authContainer.style.display = 'none';
-        appContainer.style.display = 'block';
-        userEmailDisplay.textContent = `ログイン中: ${user.email}`;
-      } else {
-        authContainer.style.display = 'block';
-        appContainer.style.display = 'none';
+// ---------- ピアノ楽譜エディタ ----------
+let notes = [], redo = [], dur = 1, accPref = '#', ts = 4, octave = 4, playing = false, timers = [], playIdx = -1;
+const WHITE = { 0:0, 2:1, 4:2, 5:3, 7:4, 9:5, 11:6 };
+const SOL = ['ド','レ','ミ','ファ','ソ','ラ','シ'], LET = ['C','D','E','F','G','A','B'];
+const cvE = $('staffCanvas'), g2 = cvE.getContext('2d');
+
+function spell(midi, pref) {
+  const pc = midi % 12, oc = Math.floor(midi / 12) - 1;
+  if (pc in WHITE) return { letter: WHITE[pc], oc, acc: '' };
+  return pref === 'b' ? { letter: WHITE[pc + 1], oc, acc: 'b' } : { letter: WHITE[pc - 1], oc, acc: '#' };
+}
+function addItem(it) { notes.push(it); redo = []; redrawStaff(); }
+function pressKey(midi) { playTone(midi, getAudioContext().currentTime, 0.6); addItem({ t: 'n', midi, d: dur, acc: accPref }); }
+
+function buildKeyboard() {
+  const keys = $('keys'); keys.innerHTML = '';
+  const base = (octave + 1) * 12, whites = [0,2,4,5,7,9,11,12];
+  whites.forEach((s, i) => {
+    const m = base + s, b = document.createElement('button');
+    b.className = 'key wk'; b.dataset.midi = m;
+    b.innerHTML = `<span>${SOL[i % 7]}</span><span class="kname">${LET[i % 7]}${Math.floor(m / 12) - 1}</span>`;
+    keys.appendChild(b);
+  });
+  [[1,0],[3,1],[6,3],[8,4],[10,5]].forEach(([s, wi]) => {
+    const b = document.createElement('button');
+    b.className = 'key bk'; b.dataset.midi = base + s;
+    b.style.left = ((wi + 1) / whites.length * 100) + '%';
+    keys.appendChild(b);
+  });
+  $('oct-label').textContent = `C${octave}〜C${octave + 1}`;
+}
+$('keys').addEventListener('click', e => { const k = e.target.closest('.key'); if (k) pressKey(+k.dataset.midi); });
+function radio(sel, attr, cb) {
+  document.querySelectorAll(sel).forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll(sel).forEach(x => x.classList.remove('on')); b.classList.add('on'); cb(b.dataset[attr]);
+  }));
+}
+radio('[data-dur]', 'dur', v => dur = +v);
+radio('[data-acc]', 'acc', v => accPref = v);
+$('add-rest').onclick = () => addItem({ t: 'r', d: dur });
+$('oct-down').onclick = () => { octave = Math.max(2, octave - 1); buildKeyboard(); };$('oct-up').onclick = () => { octave = Math.min(5, octave + 1); buildKeyboard(); };
+$('piano-ts').onchange = e => { ts = +e.target.value; redrawStaff(); };$('undo').onclick = () => { if (notes.length) { redo.push(notes.pop()); redrawStaff(); } };
+$('redo').onclick = () => { if (redo.length) { notes.push(redo.pop()); redrawStaff(); } };$('clear').onclick = () => { notes = []; redo = []; redrawStaff(); };
+
+const GAP_E = 10, SYS_H = 210, LEFT_E = 80, PPB_E = 40, T_BOT = 30, B_BOT = 18;
+function geoE(line) {
+  const tt = 20 + line * SYS_H + 30, bt = tt + 4 * GAP_E + 50;
+  return { tt, tb: tt + 4 * GAP_E, bt, bb: bt + 4 * GAP_E };
+}
+function layoutE(W) {
+  const ms = []; let beatPos = 0;
+  notes.forEach((it, i) => {
+    const m = Math.floor(beatPos / ts + 1e-9);
+    while (ms.length <= m) ms.push({ items: [], beats: 0 });
+    ms[m].items.push(i); ms[m].beats += it.d; beatPos += it.d;
+  });
+  if (!ms.length || Math.abs(beatPos / ts - Math.round(beatPos / ts)) < 1e-9) ms.push({ items: [], beats: 0 });
+  ms.forEach(m => m.width = 30 + m.items.reduce((s, i) => s + Math.max(24, notes[i].d * PPB_E), 0) + Math.max(0, ts - m.beats) * PPB_E);
+  const avail = W - LEFT_E - 10, pos = []; let line = 0, x = LEFT_E;
+  ms.forEach(m => {
+    if (x > LEFT_E && x + m.width > LEFT_E + avail) { line++; x = LEFT_E; }
+    m.line = line; m.x = x; let ix = x + 15;
+    m.items.forEach(i => { pos[i] = { x: ix, line }; ix += Math.max(24, notes[i].d * PPB_E); });
+    x += m.width;
+  });
+  return { ms, pos, lines: line + 1 };
+}
+function staffE(y0, x1, x2) { for (let i = 0; i < 5; i++) { g2.beginPath(); g2.moveTo(x1, y0 + i * GAP_E); g2.lineTo(x2, y0 + i * GAP_E); g2.stroke(); } }
+
+function drawRest(x, y, d) {
+  g2.save(); g2.lineWidth = 2;
+  if (d >= 4) g2.fillRect(x - 6, y - 4, 12, 5);
+  else if (d >= 2) g2.fillRect(x - 6, y - 1, 12, 5);
+  else if (d === 1) { g2.beginPath(); g2.moveTo(x - 3, y - 10); g2.lineTo(x + 3, y - 4); g2.lineTo(x - 3, y + 2); g2.lineTo(x + 3, y + 8); g2.stroke(); }
+  else { const n = d === 0.5 ? 1 : 2; for (let k = 0; k < n; k++) { g2.beginPath(); g2.arc(x - 2, y - 6 + k * 7, 2.2, 0, 7); g2.fill(); } g2.beginPath(); g2.moveTo(x + 3, y - 8); g2.lineTo(x - 3, y + (n - 1) * 7 + 6); g2.stroke(); }
+  g2.restore();
+}
+function redrawStaff() {
+  const W = Math.max(300, $('score-box').clientWidth - 24), L = layoutE(W), H = Math.max(230, L.lines * SYS_H + 20);
+  cvE.width = W; cvE.height = H;
+  g2.fillStyle = '#fff'; g2.fillRect(0, 0, W, H);
+  g2.strokeStyle = g2.fillStyle = '#111';
+  for (let l = 0; l < L.lines; l++) {
+    const g = geoE(l), lm = L.ms.filter(m => m.line === l), last = lm[lm.length - 1], xe = last.x + last.width;
+    g2.lineWidth = 1; staffE(g.tt, 15, xe); staffE(g.bt, 15, xe);
+    g2.lineWidth = 2; g2.beginPath(); g2.moveTo(15, g.tt); g2.lineTo(15, g.bb); g2.stroke();
+    g2.font = '32px serif'; g2.fillText('𝄞', 20, g.tt + 3.3 * GAP_E); g2.fillText('𝄢', 20, g.bt + GAP_E * 1.1);
+    lm.forEach(m => { g2.lineWidth = 1; g2.beginPath(); g2.moveTo(m.x + m.width, g.tt); g2.lineTo(m.x + m.width, g.bb); g2.stroke(); });
+  }
+  notes.forEach((it, i) => {
+    const { x, line } = L.pos[i], g = geoE(line);
+    g2.strokeStyle = g2.fillStyle = i === playIdx ? '#c2410c' : '#111'; g2.lineWidth = 1.5;
+    if (it.t === 'r') { drawRest(x, g.tt + 2 * GAP_E, it.d); return; }
+    const sp = spell(it.midi, it.acc), step = sp.oc * 7 + sp.letter, treble = it.midi >= 60;
+    const bottom = treble ? g.tb : g.bb, rel = step - (treble ? T_BOT : B_BOT), y = bottom - rel * GAP_E / 2;
+    const top = treble ? g.tt : g.bt;
+    g2.lineWidth = 1;
+    for (let r = 0; r >= rel + 0; r -= 2) { if (r <= -2 || r < 0) { const ly = bottom - r * GAP_E / 2; g2.beginPath(); g2.moveTo(x - 9, ly); g2.lineTo(x + 9, ly); g2.stroke(); } }
+    for (let r = 10; r <= rel; r += 2) { const ly = bottom - r * GAP_E / 2; g2.beginPath(); g2.moveTo(x - 9, ly); g2.lineTo(x + 9, ly); g2.stroke(); }
+    g2.lineWidth = 1.5; g2.beginPath(); g2.ellipse(x, y, 5.5, 4, -Math.PI / 6, 0, Math.PI * 2);
+    if (it.d >= 2) g2.stroke(); else g2.fill();
+    if (sp.acc) { g2.font = '16px serif'; g2.fillText(sp.acc === '#' ? '♯' : '♭', x - 17, y + 5); }
+    if (it.d < 4) {
+      const up = y > top + 2 * GAP_E, sx = up ? x + 5 : x - 5, ey = up ? y - 32 : y + 32;
+      g2.beginPath(); g2.moveTo(sx, y); g2.lineTo(sx, ey); g2.stroke();
+      const flags = it.d === 0.5 ? 1 : it.d === 0.25 ? 2 : 0;
+      for (let f = 0; f < flags; f++) {
+        g2.beginPath(); g2.moveTo(sx, up ? ey + f * 6 : ey - f * 6);
+        g2.quadraticCurveTo(sx + 10, up ? ey + f * 6 + 8 : ey - f * 6 - 8, sx + 7, up ? ey + f * 6 + 16 : ey - f * 6 - 16); g2.stroke();
       }
+    }
+  });
+}
+function playScore() {
+  if (playing) { stopScore(); return; }
+  if (!notes.length) { showToast('再生する音符がありません', 'error'); return; }
+  const ctx = getAudioContext(), spb = 60 / bpm, start = ctx.currentTime + 0.1; let t = 0; playing = true;
+  notes.forEach((it, i) => {
+    const when = start + t, d = it.d * spb;
+    if (it.t === 'n') playTone(it.midi, when, d * 0.9);
+    timers.push(setTimeout(() => { playIdx = i; redrawStaff(); }, (when - ctx.currentTime) * 1000));
+    t += d;
+  });
+  timers.push(setTimeout(stopScore, (start + t - ctx.currentTime) * 1000 + 200));
+  $('play-score').textContent = '■ 停止'; $('play-score').classList.replace('success', 'danger');
+}
+function stopScore() {
+  timers.forEach(clearTimeout); timers = []; playing = false; playIdx = -1;
+  if ($('modal').style.display === 'flex' &&$('piano-sec').style.display !== 'none') redrawStaff();
+  $('play-score').textContent = '▶ 再生'; $('play-score').classList.replace('danger', 'success');
+}
+$('play-score').onclick = playScore;
+$('score-img').onclick = () => {
+  if (!notes.length) { showToast('音符がありません', 'error'); return; }
+  $('score-img-el').src = cvE.toDataURL('image/png');$('score-img-out').hidden = false;
+};
+
+// ---------- ギターTAB ----------
+const chordDb = {
+  C:["0","1","0","2","3","x"], D:["2","3","2","0","x","x"], E:["0","0","1","2","2","0"],
+  F:["1","1","2","3","3","1"], G:["3","0","0","0","2","3"], A:["0","2","2","2","0","x"],
+  Dm:["1","3","2","0","x","x"], Em:["0","0","0","2","2","0"], Am:["0","1","2","2","0","x"],
+  C7:["0","1","3","2","3","x"], D7:["2","1","2","0","x","x"], E7:["0","0","1","0","2","0"],
+  G7:["1","0","0","0","2","3"], A7:["0","2","0","2","0","x"], CM7:["0","0","0","2","3","x"],
+  Dm7:["1","1","2","0","x","x"], Em7:["0","0","0","0","2","0"], Am7:["0","1","0","2","0","x"]
+};
+const sLabels = ['1st (E)','2nd (B)','3rd (G)','4th (D)','5th (A)','6th (E)'];
+const chordInput = $('chordInput');
+const fmt = r => { const c = r.trim(); return c ? c[0].toUpperCase() + c.slice(1) : ''; };
+const parseChords = () => chordInput.value.split(/[, 、]+/).map(fmt).filter(Boolean);
+
+function diagramSvg(f) {
+  if (!f) return '<svg width="50" height="65"><text x="25" y="40" text-anchor="middle" fill="#fff">?</text></svg>';
+  let s = '<svg width="50" height="65" viewBox="0 0 50 65" stroke="#fff" fill="#fff">';
+  for (let i = 0; i < 6; i++) s += `<line x1="${8 + i * 7}" y1="10" x2="${8 + i * 7}" y2="50" stroke-width="1"/>`;
+  for (let r = 0; r <= 4; r++) s += `<line x1="8" y1="${10 + r * 10}" x2="43" y2="${10 + r * 10}" stroke-width="${r ? 1 : 2}"/>`;
+  [...f].reverse().forEach((v, i) => {
+    const x = 8 + i * 7;
+    if (v === 'x') s += `<text x="${x}" y="8" font-size="8" text-anchor="middle" stroke="none">×</text>`;
+    else if (v === '0') s += `<circle cx="${x}" cy="6" r="2" fill="none"/>`;
+    else s += `<circle cx="${x}" cy="${10 + (+v - 0.5) * 10}" r="3" stroke="none"/>`;
+  });
+  return s + '</svg>';
+}
+function el(cls, txt) { const d = document.createElement('div'); d.className = cls; if (txt !== undefined) d.textContent = txt; return d; }
+function renderTab() {
+  const chords = parseChords(), grid = $('tabGrid'), dr =$('diagramRow');
+  grid.innerHTML = dr.innerHTML = '';
+  const unk = chords.filter(c => !chordDb[c]);
+  $('chord-warn').textContent = unk.length ? `未登録のコード: ${unk.join(', ')}` : '';
+  if (!chords.length) { grid.innerHTML = '<div style="color:#94a3b8;padding:20px;text-align:center">コードを入力してください</div>'; return; }
+  const cr = el('tab-row'); cr.appendChild(el('slabel', 'コード'));
+  chords.forEach(c => {
+    cr.appendChild(el('badge' + (chordDb[c] ? '' : ' unknown'), c));
+    const d = el('diagram'); d.innerHTML = diagramSvg(chordDb[c]); dr.appendChild(d);
+  });
+  grid.appendChild(cr);
+  for (let s = 0; s < 6; s++) {
+    const row = el('tab-row'); row.appendChild(el('slabel', sLabels[s]));
+    const line = el('sline');
+    chords.forEach(c => {
+      const v = chordDb[c] ? chordDb[c][s] : '?', slot = el('slot');
+      slot.appendChild(el('fret' + (v === 'x' ? ' mute' : v === '0' ? ' open' : ''), v === 'x' ? '×' : v));
+      line.appendChild(slot);
     });
+    row.appendChild(line); grid.appendChild(row);
+  }
+}
+function setChords(s) { chordInput.value = s; renderTab(); }
+chordInput.addEventListener('input', renderTab);
 
-    // ログインボタンの処理
-    document.getElementById('login-btn').addEventListener('click', async () => {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      if (!email || !password) {
-        alert('メールアドレスとパスワードを入力してください。');
-        return;
-      }
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (error) {
-        alert('ログインエラー: ' + error.message);
-      }
-    });
+let gPlaying = false, gTimers = [];
+function playChords() {
+  if (gPlaying) { stopChords(); return; }
+  const all = parseChords(), chords = all.filter(c => chordDb[c]);
+  if (!chords.length) { showToast('再生できるコードがありません', 'error'); return; }
+  const ctx = getAudioContext(), spb = 60 / bpm, start = ctx.currentTime + 0.1; gPlaying = true;
+  const open = [64, 59, 55, 50, 45, 40];
+  chords.forEach((c, bar) => {
+    const f = chordDb[c], bs = start + bar * 4 * spb;
+    for (let b = 0; b < 4; b++) for (let s = 5, k = 0; s >= 0; s--) {
+      if (f[s] === 'x') continue;
+      playTone(open[s] + +f[s], bs + b * spb + k * 0.02, 0.5); k++;
+    }
+    gTimers.push(setTimeout(() => {
+      const knownIdx = all.map((x, i) => chordDb[x] ? i : -1).filter(i => i >= 0);
+      document.querySelectorAll('.badge').forEach((b, i) => b.classList.toggle('active', i === knownIdx[bar]));
+    }, (bs - ctx.currentTime) * 1000));
+  });
+  gTimers.push(setTimeout(stopChords, (start + chords.length * 4 * spb - ctx.currentTime) * 1000 + 300));
+  $('play-chords').textContent = '■ 停止'; $('play-chords').classList.replace('success', 'danger');
+}
+function stopChords() {
+  gTimers.forEach(clearTimeout); gTimers = []; gPlaying = false;
+  document.querySelectorAll('.badge').forEach(b => b.classList.remove('active'));
+  $('play-chords').textContent = '▶ 再生'; $('play-chords').classList.replace('danger', 'success');
+}
+$('play-chords').onclick = playChords;
 
-    // 新規登録ボタンの処理
-    document.getElementById('signup-btn').addEventListener('click', async () => {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      if (!email || !password) {
-        alert('メールアドレスとパスワードを入力してください。');
-        return;
-      }
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        alert('新規登録とログインが完了しました！');
-      } catch (error) {
-        alert('登録エラー: ' + error.message);
-      }
-    });
+function asciiTab() {
+  const chords = parseChords(); if (!chords.length) return '';
+  let head = '       ', lines = ['1st|','2nd|','3rd|','4th|','5th|','6th|'];
+  chords.forEach(c => { head += c.padEnd(7); for (let i = 0; i < 6; i++) lines[i] += `--${chordDb[c] ? chordDb[c][i] : '?'}---`; });
+  return head + '\n\n' + lines.map(l => l + '|').join('\n');
+}
+function copyTextTab() {
+  const t = asciiTab(); if (!t) return;
+  navigator.clipboard.writeText(t).then(() => showToast('タブ譜をコピーしました'), () => showToast('コピーに失敗しました', 'error'));
+}
+async function downloadImageTab() {
+  if (typeof html2canvas === 'undefined') { showToast('画像ライブラリを読み込めません', 'error'); return; }
+  showToast('画像を生成中...');
+  try {
+    const c = await html2canvas($('tabViewport'), { backgroundColor: '#090d16', scale: 2 });
+    $('tab-img-el').src = c.toDataURL('image/png');$('tab-img-out').hidden = false;
+    showToast('画像を生成しました（長押し/右クリックで保存）');
+  } catch { showToast('画像の生成に失敗しました', 'error'); }
+}
 
-    // ログアウトボタンの処理
-    document.getElementById('logout-btn').addEventListener('click', async () => {
-      try {
-        await signOut(auth);
-      } catch (error) {
-        alert('ログアウトエラー: ' + error.message);
-      }
-    });
-  </script>
+// ---------- チャット ----------
+const chatBox = $('chat-box'), mediaFile =$('media-file');
+mediaFile.addEventListener('change', () => $('file-name').textContent = mediaFile.files[0]?.name || '選択されていません');
+function addMsg(text, who) {
+  const d = document.createElement('div'); d.className = 'msg ' + who; d.textContent = text;
+  chatBox.appendChild(d); chatBox.scrollTop = chatBox.scrollHeight; return d;
+}
+$('chat-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const message = $('user-input').value.trim(), file = mediaFile.files[0];
+  if (!message && !file) return;
+  addMsg(message + (file ? ` [添付: ${file.name}]` : ''), 'user'); $('user-input').value = '';
+  const loading = addMsg('AIが分析・思考中です...', 'assistant');
+  const fd = new FormData(); fd.append('message', message); if (file) fd.append('media', file);
+  try {
+    const res = await fetch('/api/chat', { method: 'POST', body: fd });
+    const data = await res.json(); loading.remove();
+    addMsg(data.reply || 'エラーが発生しました。', 'assistant');
+  } catch { loading.remove(); addMsg('通信エラーが発生しました。（/api/chat のバックエンドが必要です）', 'assistant'); }
+  finally { mediaFile.value = ''; $('file-name').textContent = '選択されていません'; }
+});
+</script>
 </body>
 </html>
