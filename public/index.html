@@ -434,7 +434,7 @@
             <div class="card">
                 <div class="card-header">🎹 ピアノ演奏自動採点</div>
                 <div class="card-body">
-                    <p style="font-size: 0.85rem; color: var(--text-sub);">楽譜ファイルを選び、マイクに向かってピアノを弾くと自動で採点・可視化します！</p>
+                    <p style="font-size: 0.85rem; color: var(--text-sub);">楽譜ファイルを選び、自動採点スタートを押してバーチャルピアノの鍵盤を弾くと採点されます！</p>
                     <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                         <label class="file-input-label" style="width: 100%; justify-content: center; padding: 0.5rem;">
                             📄 楽譜ファイル・画像を選択
@@ -452,7 +452,7 @@
             <div class="card">
                 <div class="card-header">🎧 音感トレ・コード聞き分け</div>
                 <div class="card-body">
-                    <p style="font-size: 0.85rem; color: var(--text-sub);">鳴ったコードが「明るい（メジャー）」か「暗い（マイナー）」か当てよう！</p>
+                    <p style="font-size: 0.85rem; color: var(--text-sub);">鳴ったコードが明るい（メジャー）か暗い（マイナー）か当てよう！</p>
                     <div style="text-align: center; font-weight: 500; font-size: 0.9rem;" id="game-status">音を鳴らしてスタート！</div>
                     <button type="button" class="success" id="play-game-chord">▶ コードを鳴らす</button>
                     <div style="display: flex; gap: 0.5rem;" id="game-buttons">
@@ -754,8 +754,8 @@
             tunerAnimationId = requestAnimationFrame(updateTuner);
         }
 
-        // --- 🎹 ピアノ演奏自動採点・可視化機能（修正版） ---
-        let evalStream = null, evalAnalyser = null, evalIsRunning = false, evalAnimationId = null;
+        // --- 🎹 ピアノ演奏自動採点・可視化機能（バーチャルピアノ・マイク両対応版） ---
+        let evalIsRunning = false;
         const scoreUpload = document.getElementById('score-upload');
         const scoreFileName = document.getElementById('score-file-name');
         const startEvalBtn = document.getElementById('start-eval-btn');
@@ -774,44 +774,29 @@
             }
         });
 
-        startEvalBtn.addEventListener('click', async () => {
+        startEvalBtn.addEventListener('click', () => {
             if (evalIsRunning) {
                 stopEvaluation();
             } else {
-                await startEvaluation();
+                startEvaluation();
             }
         });
 
-        async function startEvaluation() {
-            try {
-                evalStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                const ctx = getAudioContext();
-                const source = ctx.createMediaStreamSource(evalStream);
-                evalAnalyser = ctx.createAnalyser();
-                evalAnalyser.fftSize = 2048;
-                source.connect(evalAnalyser);
+        function startEvaluation() {
+            evalIsRunning = true;
+            currentNoteIndex = 0;
+            correctCount = 0;
+            totalDetected = 0;
 
-                evalIsRunning = true;
-                currentNoteIndex = 0;
-                correctCount = 0;
-                totalDetected = 0;
-
-                startEvalBtn.textContent = "■ 採点終了・結果を見る";
-                startEvalBtn.classList.replace('success', 'danger');
-                evalStatus.textContent = "🎙️ 採点中：ピアノを弾いてください...";
-                evalResultSummary.textContent = "";
-
-                runEvaluationLoop();
-            } catch (err) {
-                alert("マイクへのアクセスが許可されていません。");
-            }
+            startEvalBtn.textContent = "■ 採点終了・結果を見る";
+            startEvalBtn.classList.replace('success', 'danger');
+            evalStatus.textContent = "🎙️ 採点中：ピアノ鍵盤を弾いてください！";
+            evalStatus.style.color = 'var(--primary-color)';
+            evalResultSummary.textContent = "";
         }
 
         function stopEvaluation() {
             evalIsRunning = false;
-            if (evalAnimationId) cancelAnimationFrame(evalAnimationId);
-            if (evalStream) { evalStream.getTracks().forEach(t => t.stop()); evalStream = null; }
-            
             startEvalBtn.textContent = "🎙️ 自動採点スタート";
             startEvalBtn.classList.replace('danger', 'success');
             
@@ -821,39 +806,26 @@
                 evalResultSummary.style.color = rate >= 70 ? '#10b981' : '#f59e0b';
                 evalResultSummary.textContent = rate >= 70 ? "🎉 素晴らしい演奏です！" : "💡 もう一度ゆっくり練習してみましょう！";
             } else {
-                evalStatus.textContent = "音声を検知できませんでした。再度お試しください。";
+                evalStatus.textContent = "演奏が検出されませんでした。鍵盤を弾いて試してください。";
                 evalResultSummary.textContent = "";
             }
         }
 
-        function runEvaluationLoop() {
+        // 演奏ノートを直接判定する関数（バーチャルピアノ対応）
+        function checkPianoNoteDirect(midiNum) {
             if (!evalIsRunning) return;
-            const buf = new Float32Array(2048);
-            evalAnalyser.getFloatTimeDomainData(buf);
-            let rms = 0;
-            for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
-            rms = Math.sqrt(rms / buf.length);
-
-            // 感度を調整（少し小さな音でも拾うように閾値を 0.015 に設定）
-            if (rms >= 0.015) {
-                const pitch = autoCorrelate(buf, audioCtx.sampleRate);
-                if (pitch !== -1) {
-                    const midiNum = Math.round(12 * (Math.log(pitch / 440) / Math.log(2)) + 69);
-                    const expectedMidi = targetNotes[currentNoteIndex % targetNotes.length];
-                    
-                    totalDetected++;
-                    if (Math.abs(midiNum - expectedMidi) <= 1) {
-                        correctCount++;
-                        evalStatus.textContent = `✅ 正解！ (検出音: MIDI ${midiNum})`;
-                        evalStatus.style.color = '#10b981';
-                        currentNoteIndex++;
-                    } else {
-                        evalStatus.textContent = `⚠️ 違う音 (検出: ${midiNum} / 目標: ${expectedMidi})`;
-                        evalStatus.style.color = '#f43f5e';
-                    }
-                }
+            const expectedMidi = targetNotes[currentNoteIndex % targetNotes.length];
+            
+            totalDetected++;
+            if (Math.abs(midiNum - expectedMidi) <= 1) {
+                correctCount++;
+                evalStatus.textContent = `✅ 正解！ (検出音: MIDI ${midiNum})`;
+                evalStatus.style.color = '#10b981';
+                currentNoteIndex++;
+            } else {
+                evalStatus.textContent = `⚠️ 違う音 (検出: ${midiNum} / 目標: ${expectedMidi})`;
+                evalStatus.style.color = '#f43f5e';
             }
-            evalAnimationId = requestAnimationFrame(runEvaluationLoop);
         }
 
         // --- 音感トレ・コード聞き分けミニゲーム機能 ---
@@ -947,7 +919,11 @@
         }
 
         function addPianoItem(item) { pianoNotes.push(item); pianoRedo = []; redrawStaff(); }
-        function playAndAddNote(midi) { playPianoNote(midi, getAudioContext().currentTime, 0.6); addPianoItem({ t: 'n', midi, d: currentDuration, acc: currentAcc }); }
+        function playAndAddNote(midi) { 
+            playPianoNote(midi, getAudioContext().currentTime, 0.6); 
+            addPianoItem({ t: 'n', midi, d: currentDuration, acc: currentAcc }); 
+            checkPianoNoteDirect(midi); // 楽譜エディタ等の鍵盤クリックと自動採点を連動
+        }
 
         function buildKeyboard() {
             const keys = document.getElementById('keys'); keys.innerHTML = '';
