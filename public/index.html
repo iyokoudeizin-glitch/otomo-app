@@ -932,7 +932,7 @@ async function downloadImageTab() {
 const chatBox = $('chat-box'), mediaFile =$('media-file');
 mediaFile.addEventListener('change', () => $('file-name').textContent = mediaFile.files[0]?.name || '選択されていません');
 function addMsg(text, who) {
-  const d = document.createElement('div'); d.className = 'msg ' + who; d.textContent = text;
+  const d = document.createElement('div'); d.className = 'msg ' + who; d.innerHTML = text;
   chatBox.appendChild(d); chatBox.scrollTop = chatBox.scrollHeight; return d;
 }
 $('chat-form').addEventListener('submit', async e => {
