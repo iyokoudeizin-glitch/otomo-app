@@ -12,12 +12,14 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);
 header{background:var(--card);border-bottom:1px solid var(--bd);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center}
 header h1{font-size:1.25rem;color:var(--p)}header p{font-size:.85rem;color:var(--sub)}
 
-/* 認証画面用スタイル */
-#view-auth {
-  display: flex;
+/* 画面切り替え（表示制御） */
+.view-section { display: none !important; }
+.view-section.active { display: flex !important; flex-direction: column; flex: 1; }
+
+/* 認証画面スタイル */
+#view-auth.active {
   justify-content: center;
   align-items: center;
-  flex: 1;
   padding: 2rem;
 }
 .auth-card {
@@ -51,10 +53,6 @@ header h1{font-size:1.25rem;color:var(--p)}header p{font-size:.85rem;color:var(-
   cursor: pointer;
   font-size: 1rem;
 }
-
-/* 画面切り替えビュー */
-.view-section{display:none}
-.view-section.active{display:flex;flex-direction:column;flex:1}
 
 .main{display:flex;flex:1;max-width:1400px;width:100%;margin:0 auto;gap:1.5rem;padding:1.5rem}
 .chat{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;min-height:500px}
@@ -328,9 +326,8 @@ canvas{display:block}
     signOut
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-  // ご自身のFirebase設定（APIキーを正しく設定してください）
   const firebaseConfig = {
-    apiKey: "AIzaSyBailgLJCY2j4YewqhgxIrFBo-wRxixOf8", // ← ご自身のAPIキーを入力してください
+    apiKey: "AIzaSyBailgLJCY2j4YewqhgxIrFBo-wRxixOf8", // ← あなたの正しいAPIキーをここに設定してください
     authDomain: "otomo-8f479.firebaseapp.com",
     projectId: "otomo-8f479",
     storageBucket: "otomo-8f479.appspot.com",
@@ -346,7 +343,7 @@ canvas{display:block}
   const viewLearn = document.getElementById('view-learn');
   const logoutBtn = document.getElementById('logout-btn');
 
-  // 認証状態の監視
+  // 認証状態の監視（切り替え処理を厳密に制御）
   onAuthStateChanged(auth, (user) => {
     if (user) {
       viewAuth.classList.remove('active');
@@ -458,7 +455,7 @@ function clickSound() {
 function startMetro() { beat = 0; clickSound(); metroTimer = setInterval(clickSound, 60000 / bpm); metroOn = true; }
 function stopMetro() { clearInterval(metroTimer); metroOn = false; }
 
-// ---------- 音程検出 (自己相関) ----------
+// ---------- 音程検出 ----------
 function autoCorrelate(buf, sr) {
   let SIZE = buf.length, rms = 0;
   for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
@@ -711,7 +708,7 @@ function frameL() {
   if (!runningL) return;
   const now = getAudioContext().currentTime, beat = rsL + (now - t0L) / spbL;
   cursorL = beat;
-  if ($('mode').value === 'test') selL.forEach(n => { if (!n.s && now - (t0L + (n.b - rsL) * spbL) > TOLL()) n.s = 'miss'; });
+  if ($('mode').value === 'test') selL.forEach(n => { if (!n.s && now - (t0L + (n.b - rsL) * spbL)) > TOLL()) n.s = 'miss'; });
   if (beat >= reL + 0.3 / spbL) {
     if ($('mode').value === 'test') {
       const acc = Math.round(hitsL / selL.length * 100);
