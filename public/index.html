@@ -12,47 +12,9 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);
 header{background:var(--card);border-bottom:1px solid var(--bd);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center}
 header h1{font-size:1.25rem;color:var(--p)}header p{font-size:.85rem;color:var(--sub)}
 
-/* 画面切り替え（表示制御） */
-.view-section { display: none !important; }
-.view-section.active { display: flex !important; flex-direction: column; flex: 1; }
-
-/* 認証画面スタイル */
-#view-auth.active {
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
-}
-.auth-card {
-  background: var(--card);
-  border: 1px solid var(--bd);
-  padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-}
-.auth-card h2 { margin-bottom: 10px; color: var(--p); }
-.auth-card p { font-size: 0.9rem; color: var(--sub); margin-bottom: 20px; }
-.auth-card input {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 15px;
-  border: 1px solid var(--bd);
-  border-radius: 8px;
-  font-size: 1rem;
-  outline: none;
-}
-.auth-card button {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 10px;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 1rem;
-}
+/* 画面切り替えビュー */
+.view-section{display:none}
+.view-section.active{display:flex;flex-direction:column;flex:1}
 
 .main{display:flex;flex:1;max-width:1400px;width:100%;margin:0 auto;gap:1.5rem;padding:1.5rem}
 .chat{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;min-height:500px}
@@ -150,28 +112,10 @@ canvas{display:block}
 </style>
 </head>
 <body>
-<header>
-  <h1>otomo</h1>
-  <div style="display:flex;align-items:center;gap:1rem;">
-    <p>AI Music Learning & Sheet Music Platform</p>
-    <button id="logout-btn" class="danger" style="display:none;padding:4px 10px;font-size:0.75rem;">ログアウト</button>
-  </div>
-</header>
+<header><h1>otomo</h1><p>AI Music Learning & Sheet Music Platform</p></header>
 
-<!-- AUTH VIEW (未ログイン時) -->
-<div id="view-auth" class="view-section active">
-  <div class="auth-card">
-    <h2>🔒 otomo 認証</h2>
-    <p>メールアドレスとパスワードを入力してください。</p>
-    <input type="email" id="auth-email" placeholder="メールアドレス" required />
-    <input type="password" id="auth-password" placeholder="パスワード（6文字以上）" required />
-    <button id="auth-login-btn" class="btn">ログイン</button>
-    <button id="auth-signup-btn" class="secondary" style="width:100%;padding:12px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:1rem;color:#fff;">新規登録</button>
-  </div>
-</div>
-
-<!-- MAIN VIEW (ログイン成功時) -->
-<div id="view-main" class="view-section">
+<!-- MAIN VIEW -->
+<div id="view-main" class="view-section active">
  <div class="main">
   <div class="chat">
    <div id="chat-box"><div class="msg assistant">こんにちは！otomoへようこそ。音楽の質問や、楽譜画像・演奏動画の分析もできます。</div></div>
@@ -314,82 +258,6 @@ canvas{display:block}
 </div></div>
 
 <div id="toast"></div>
-
-<!-- Firebase (CDN) スクリプト -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { 
-    getAuth, 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword,
-    onAuthStateChanged,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBailgLJCY2j4YewqhgxIrFBo-wRxixOf8", // ← あなたの正しいAPIキーをここに設定してください
-    authDomain: "otomo-8f479.firebaseapp.com",
-    projectId: "otomo-8f479",
-    storageBucket: "otomo-8f479.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-
-  const viewAuth = document.getElementById('view-auth');
-  const viewMain = document.getElementById('view-main');
-  const viewLearn = document.getElementById('view-learn');
-  const logoutBtn = document.getElementById('logout-btn');
-
-  // 認証状態の監視（切り替え処理を厳密に制御）
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      viewAuth.classList.remove('active');
-      viewMain.classList.add('active');
-      logoutBtn.style.display = 'block';
-    } else {
-      viewAuth.classList.add('active');
-      viewMain.classList.remove('active');
-      viewLearn.classList.remove('active');
-      logoutBtn.style.display = 'none';
-    }
-  });
-
-  // ログイン
-  document.getElementById('auth-login-btn').addEventListener('click', async () => {
-    const email = document.getElementById('auth-email').value;
-    const password = document.getElementById('auth-password').value;
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      alert('ログインエラー: ' + error.message);
-    }
-  });
-
-  // 新規登録
-  document.getElementById('auth-signup-btn').addEventListener('click', async () => {
-    const email = document.getElementById('auth-email').value;
-    const password = document.getElementById('auth-password').value;
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      alert('登録成功しました！');
-    } catch (error) {
-      alert('登録エラー: ' + error.message);
-    }
-  });
-
-  // ログアウト
-  logoutBtn.addEventListener('click', async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      alert('ログアウトエラー: ' + error.message);
-    }
-  });
-</script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const $ = id => document.getElementById(id);
@@ -455,11 +323,11 @@ function clickSound() {
 function startMetro() { beat = 0; clickSound(); metroTimer = setInterval(clickSound, 60000 / bpm); metroOn = true; }
 function stopMetro() { clearInterval(metroTimer); metroOn = false; }
 
-// ---------- 音程検出 ----------
+// ---------- 音程検出 (自己相関) ----------
 function autoCorrelate(buf, sr) {
   let SIZE = buf.length, rms = 0;
   for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
-  if (Math.sqrt(rms / SIZE) < 0.008) return -1;
+  if (Math.sqrt(rms / SIZE) < 0.01) return -1;
   let r1 = 0, r2 = SIZE - 1, th = 0.2;
   for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < th) { r1 = i; break; }
   for (let i = 1; i < SIZE / 2; i++) if (Math.abs(buf[SIZE - i]) < th) { r2 = SIZE - i; break; }
@@ -505,7 +373,7 @@ function updateTuner() {
   if (!tunerOn) return;
   const buf = new Float32Array(2048); tunerAnalyser.getFloatTimeDomainData(buf);
   let rms = 0; for (const v of buf) rms += v * v; rms = Math.sqrt(rms / buf.length);
-  if (rms < 0.01) { resetTunerUI(); }
+  if (rms < 0.02) { resetTunerUI(); }
   else {
     const pitch = autoCorrelate(buf, audioCtx.sampleRate);
     if (pitch > 0) {
@@ -538,7 +406,7 @@ function checkGame(type) {
   else { r.style.color = '#ef4444'; r.textContent = '❌ 残念！もう一度聴き比べてみましょう。'; }
 }
 
-// ---------- OTOMO LEARN ----------
+// ---------- OTOMO LEARN (楽譜練習・採点機能) ----------
 const LET_L = { C:0, D:1, E:2, F:3, G:4, A:5, B:6 }, PCS_L = { C:0, D:2, E:4, F:5, G:7, A:9, B:11 };
 const mkNote = (step, alt, oc, h, b, d) => ({ step, alt, oc, h, b, d, midi: 12 * (oc + 1) + PCS_L[step] + alt, s: '' });
 let song = { notes: [], ms: [0], total: 0 };
@@ -708,7 +576,7 @@ function frameL() {
   if (!runningL) return;
   const now = getAudioContext().currentTime, beat = rsL + (now - t0L) / spbL;
   cursorL = beat;
-  if ($('mode').value === 'test') selL.forEach(n => { if (!n.s && now - (t0L + (n.b - rsL) * spbL)) > TOLL()) n.s = 'miss'; });
+  if ($('mode').value === 'test') selL.forEach(n => { if (!n.s && now - (t0L + (n.b - rsL) * spbL) > TOLL()) n.s = 'miss'; });
   if (beat >= reL + 0.3 / spbL) {
     if ($('mode').value === 'test') {
       const acc = Math.round(hitsL / selL.length * 100);
@@ -723,11 +591,6 @@ const TOLL = () => $('micOn').checked ? 0.45 : 0.3;
 let lastScreenL = 0;
 function noteOnL(m, src) {
   if (src === 'screen') { playTone(m, getAudioContext().currentTime, 0.5); lastScreenL = performance.now(); }
-  if (src === 'mic') {
-    const isTarget = [...reqL].some(n => n.midi === m);
-    flashL(m, isTarget ? 'ok' : 'ng');
-  }
-
   if (!runningL) return;
   const mic = src === 'mic', mode = $('mode').value;
   if (mode === 'practice') {
@@ -746,7 +609,7 @@ function noteOnL(m, src) {
   }
 }
 
-// ---------- マイク入力 ----------
+// ---------- マイク入力（音程自動検出） ----------
 let micStreamL = null, micAnalyserL = null, micRafL = null, lastMicMidiL = -1;
 async function startMicL() {
   if (micStreamL) return;
@@ -767,17 +630,17 @@ function micLoopL() {
   const buf = new Float32Array(2048); micAnalyserL.getFloatTimeDomainData(buf);
   const mute = performance.now() - lastScreenL < 700 || $('mode').value === 'listen';
   let rms = 0; for (const v of buf) rms += v * v; rms = Math.sqrt(rms / buf.length);
-  if (rms >= 0.012 && !mute) {
+  if (rms >= 0.035 && !mute) {
     const pitch = autoCorrelate(buf, getAudioContext().sampleRate);
     if (pitch > 0) {
       const midi = Math.round(12 * Math.log2(pitch / 440) + 69);
       if (midi >= 48 && midi <= 83 && midi !== lastMicMidiL) {
         lastMicMidiL = midi;
         noteOnL(midi, 'mic');
-        setTimeout(() => { if (lastMicMidiL === midi) lastMicMidiL = -1; }, 250);
+        setTimeout(() => { if (lastMicMidiL === midi) lastMicMidiL = -1; }, 200);
       }
     }
-  } else if (rms < 0.006) { lastMicMidiL = -1; }
+  } else if (rms < 0.015) { lastMicMidiL = -1; }
   micRafL = requestAnimationFrame(micLoopL);
 }
 $('micOn').onchange = e => { if (!e.target.checked) stopMicL(); else if (runningL) startMicL(); };
